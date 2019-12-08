@@ -1,0 +1,1 @@
+stack exec runhaskell -cpp -i./tests/driver ./tests/driver/Check.hs "stack exec MinHS" "$1" "$2" "$3" "$4" "$5" "$6"
