@@ -1,11 +1,11 @@
 
 ==================== FINAL INTERFACE ====================
-2019-12-08 15:21:11.9648699 UTC
+2019-12-08 17:43:11.5231453 UTC
 
 interface main:MinHS.Evaluator 8065
-  interface hash: 2b547c32fd031d519c27c5f56e5324c4
-  ABI hash: 7888607bfdbb755222fdafe5e6101914
-  export-list hash: 21c6c8f0e9d0b487438f5b88c28dc03d
+  interface hash: 5d45971fb83200460eed1cd6a9b6959a
+  ABI hash: 763e0724942e3b0752d42fcdeb447f64
+  export-list hash: bed4fc86e27a933dda7104f6539952bf
   orphan hash: 693e9af84d3dfcc71e640e005bdc5e2e
   flag hash: 0389d9b0cf9d29ba8d9c35ce4102d769
   opt_hash: 6faf2de08de32d19db9870899d88e59a
@@ -16,6 +16,7 @@ interface main:MinHS.Evaluator 8065
   where
 exports:
   MinHS.Evaluator.evalE
+  MinHS.Evaluator.evalI
   MinHS.Evaluator.evaluate
   MinHS.Evaluator.VEnv
   MinHS.Evaluator.Value{MinHS.Evaluator.B MinHS.Evaluator.Cons MinHS.Evaluator.I MinHS.Evaluator.Nil}
@@ -42,6 +43,7 @@ import  -/  ansi-wl-pprint-0.6.9:Text.PrettyPrint.ANSI.Leijen d72f9b92792fcc1753
 import  -/  ansi-wl-pprint-0.6.9:Text.PrettyPrint.ANSI.Leijen.Internal 19c78a752306db18ff4680b834e38fc5
 import  -/  base-4.12.0.0:GHC.Base fbe365a916ebeeeb4bc1f895dbe83e42
 import  -/  base-4.12.0.0:GHC.Err 3a680f55541fe399f95f794018fc3593
+import  -/  base-4.12.0.0:GHC.Num 8203d3fee487126cffd5e55ba5d0e8c3
 import  -/  base-4.12.0.0:GHC.Show fa6032f3f820e8e8ec87b97bdca4e160
 import  -/  base-4.12.0.0:Prelude 80c668cb99fbafebd524c5e897f8c982
 import  -/  ghc-prim-0.5.3:GHC.Classes 6002495dc43e58d28c87e5e5e058752a
@@ -56,13 +58,17 @@ import  -/  MinHS.Pretty a2c3722adac4918b16523478ba7a5c35
   numeric 6e187a06ed5ebbf1630e18235565fbaf
 import  -/  MinHS.Syntax a27359a8aa4022e86f719300174c8c96
   exports: d6deca1fbcb8bfd1f4cff4f1793e2d74
+  Add d64b2bef44910fdb788e32d42cbd146c
   App 62130ac796506c1889b28b622be3f642
   Bind aab6c897131a5ee041321a313d903a3d
   Con 7b1d953f557ea45487991ebc19e8f810
   Exp 5cd0e4dc4577078c5458ab29323fc9fb
+  Head 54ec73ddd00abca2f799216a0f40e756
   Let 8f992be72d159b4f7d08aae78343279a
   Num 82195563b36a03031bb3bffb8d56df0d
+  Prim 2ff43936b1baa2281a82f157d3f97079
   Program abb774a32fac37ba934a5fb26a6980a8
+  Tail 4a5f026ce2bfac5cd299f9a6a5c26827
   Var 05fb7e6ba55ebe50f82496bc50b23add
 762013bc22f413e4294835f4aac2b7a7
   $fPrettyValue ::
@@ -280,6 +286,18 @@ f8657fb28a97b5e007b56a82dea1bb1b
      Unfolding: InlineRule (2, True, True)
                 (\ (w :: MinHS.Evaluator.VEnv) (w1 :: MinHS.Syntax.Exp) ->
                  MinHS.Evaluator.$wevalE w1) -}
+83b2c95d3a9c57db573542d97e53c63c
+  evalI ::
+    MinHS.Evaluator.VEnv
+    -> MinHS.Syntax.Exp -> GHC.Integer.Type.Integer
+  {- Arity: 2, Strictness: <L,A><S,1*U>,
+     Unfolding: InlineRule (2, True, False)
+                (\ (gamma :: MinHS.Evaluator.VEnv) (ds :: MinHS.Syntax.Exp) ->
+                 case ds of wild {
+                   DEFAULT -> MinHS.Evaluator.evalI1 MinHS.Syntax.Num n -> n }) -}
+ef584810577ee61f108311903a0d4dfc
+  evalI1 :: GHC.Integer.Type.Integer
+  {- Strictness: x -}
 ad64bb359abee62c301a87784de6d91d
   evaluate :: MinHS.Syntax.Program -> MinHS.Evaluator.Value
   {- Arity: 1, Strictness: <S,1*U>,
