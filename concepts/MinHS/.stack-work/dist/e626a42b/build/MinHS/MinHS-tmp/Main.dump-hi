@@ -1,9 +1,9 @@
 
 ==================== FINAL INTERFACE ====================
-2019-12-08 17:43:12.4881635 UTC
+2019-12-09 11:17:21.763884 UTC
 
 interface main:Main 8065
-  interface hash: 099a3f6408c2eedac1ce2570f306be80
+  interface hash: 121826085185cb569897ca3ba5f638e5
   ABI hash: c50672c79d091ef8172ae6aa12c699e3
   export-list hash: 4ed631f2b99f960f75c8c699ad166405
   orphan hash: 693e9af84d3dfcc71e640e005bdc5e2e
@@ -62,8 +62,8 @@ import  -/  base-4.12.0.0:GHC.Show fa6032f3f820e8e8ec87b97bdca4e160
 import  -/  base-4.12.0.0:Prelude 80c668cb99fbafebd524c5e897f8c982
 import  -/  base-4.12.0.0:System.IO 51ffc52e2e8495d5c7b596557cf2be89
 import  -/  ghc-prim-0.5.3:GHC.Types 57064c9f957b09bc2e360061ad5cae0b
-import  -/  MinHS.Evaluator 763e0724942e3b0752d42fcdeb447f64
-  exports: bed4fc86e27a933dda7104f6539952bf
+import  -/  MinHS.Evaluator a0537bd051e05d465058d88e5494785b
+  exports: bcaabdb6095c5338f54267b9db346f46
   evaluate ad64bb359abee62c301a87784de6d91d
 import  -/  MinHS.Parse 7f24a9e9cef383fc4fbaf8bdd5398dc2
   exports: 584fc76b75fcb5b8289001641ff2f257

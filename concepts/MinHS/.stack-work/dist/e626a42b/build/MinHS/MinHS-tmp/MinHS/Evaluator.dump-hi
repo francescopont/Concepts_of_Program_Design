@@ -1,11 +1,11 @@
 
 ==================== FINAL INTERFACE ====================
-2019-12-08 17:43:11.5231453 UTC
+2019-12-09 12:09:10.7236439 UTC
 
 interface main:MinHS.Evaluator 8065
-  interface hash: 5d45971fb83200460eed1cd6a9b6959a
-  ABI hash: 763e0724942e3b0752d42fcdeb447f64
-  export-list hash: bed4fc86e27a933dda7104f6539952bf
+  interface hash: f689755b516a831eec1e01c19d2980ed
+  ABI hash: a0537bd051e05d465058d88e5494785b
+  export-list hash: bcaabdb6095c5338f54267b9db346f46
   orphan hash: 693e9af84d3dfcc71e640e005bdc5e2e
   flag hash: 0389d9b0cf9d29ba8d9c35ce4102d769
   opt_hash: 6faf2de08de32d19db9870899d88e59a
@@ -15,6 +15,7 @@ interface main:MinHS.Evaluator 8065
   used TH splices: False
   where
 exports:
+  MinHS.Evaluator.evalB
   MinHS.Evaluator.evalE
   MinHS.Evaluator.evalI
   MinHS.Evaluator.evaluate
@@ -44,6 +45,7 @@ import  -/  ansi-wl-pprint-0.6.9:Text.PrettyPrint.ANSI.Leijen.Internal 19c78a752
 import  -/  base-4.12.0.0:GHC.Base fbe365a916ebeeeb4bc1f895dbe83e42
 import  -/  base-4.12.0.0:GHC.Err 3a680f55541fe399f95f794018fc3593
 import  -/  base-4.12.0.0:GHC.Num 8203d3fee487126cffd5e55ba5d0e8c3
+import  -/  base-4.12.0.0:GHC.Real 3b42f3125c1d17d4e4b4437a3c97310f
 import  -/  base-4.12.0.0:GHC.Show fa6032f3f820e8e8ec87b97bdca4e160
 import  -/  base-4.12.0.0:Prelude 80c668cb99fbafebd524c5e897f8c982
 import  -/  ghc-prim-0.5.3:GHC.Classes 6002495dc43e58d28c87e5e5e058752a
@@ -62,12 +64,23 @@ import  -/  MinHS.Syntax a27359a8aa4022e86f719300174c8c96
   App 62130ac796506c1889b28b622be3f642
   Bind aab6c897131a5ee041321a313d903a3d
   Con 7b1d953f557ea45487991ebc19e8f810
+  Eq fb625e13f9e47f86f9b7e305adf78d84
   Exp 5cd0e4dc4577078c5458ab29323fc9fb
+  Ge 8f284077881bbc0f9a9c80970ea9da18
+  Gt c94cdab519f8d2d96642770e09d8c9fe
   Head 54ec73ddd00abca2f799216a0f40e756
+  Le f187a29fac516f2101e1d21c88f34716
   Let 8f992be72d159b4f7d08aae78343279a
+  Lt 7d4e94b6c2ff1a3eec670dbd462da780
+  Mul 41d9b862e3195ee27201033a72691cce
+  Ne 2d3b5bf8e3f1de10a434601c20a1bdc2
+  Neg 085db5a081e3fddb69a004a5ade3ef0b
+  Null 18563c7cb3ff49a8818d4ce76ac20d47
   Num 82195563b36a03031bb3bffb8d56df0d
   Prim 2ff43936b1baa2281a82f157d3f97079
   Program abb774a32fac37ba934a5fb26a6980a8
+  Quot 5aba05f693cd3b6bdab2d3fdb0b677a2
+  Sub 03abce1f7bffdc2aba19ac49f8463cae
   Tail 4a5f026ce2bfac5cd299f9a6a5c26827
   Var 05fb7e6ba55ebe50f82496bc50b23add
 762013bc22f413e4294835f4aac2b7a7
@@ -268,8 +281,14 @@ d1d94e31842d572bf95ce94d323a1176
 3c69d1cf3fd51fd0ca49b003485649d4
   $trModule4 :: GHC.Prim.Addr#
   {- HasNoCafRefs, Unfolding: ("main"#) -}
+c0780f95b517b6bb8e03e4ce87fc4834
+  $wevalB :: MinHS.Syntax.Exp -> GHC.Types.Bool
+  {- Arity: 1, Strictness: <S,1*U>, Inline: [2] -}
 b1641329ad626f8eefe7be89dfc9412f
   $wevalE :: MinHS.Syntax.Exp -> MinHS.Evaluator.Value
+  {- Arity: 1, Strictness: <S,1*U>, Inline: [2] -}
+bdca0104cbd89dcd19be457eabf003cd
+  $wevalI :: MinHS.Syntax.Exp -> GHC.Integer.Type.Integer
   {- Arity: 1, Strictness: <S,1*U>, Inline: [2] -}
 e2db86cf003bfdf351bf837796ada839
   type VEnv = MinHS.Env.Env MinHS.Evaluator.Value
@@ -279,6 +298,12 @@ e2db86cf003bfdf351bf837796ada839
     | B GHC.Types.Bool
     | Nil
     | Cons GHC.Integer.Type.Integer MinHS.Evaluator.Value
+c32a64330768f8e6a49b348c30bf59a9
+  evalB :: MinHS.Evaluator.VEnv -> MinHS.Syntax.Exp -> GHC.Types.Bool
+  {- Arity: 2, Strictness: <L,A><S,1*U>, Inline: [2],
+     Unfolding: InlineRule (2, True, True)
+                (\ (w :: MinHS.Evaluator.VEnv) (w1 :: MinHS.Syntax.Exp) ->
+                 MinHS.Evaluator.$wevalB w1) -}
 f8657fb28a97b5e007b56a82dea1bb1b
   evalE ::
     MinHS.Evaluator.VEnv -> MinHS.Syntax.Exp -> MinHS.Evaluator.Value
@@ -286,18 +311,14 @@ f8657fb28a97b5e007b56a82dea1bb1b
      Unfolding: InlineRule (2, True, True)
                 (\ (w :: MinHS.Evaluator.VEnv) (w1 :: MinHS.Syntax.Exp) ->
                  MinHS.Evaluator.$wevalE w1) -}
-83b2c95d3a9c57db573542d97e53c63c
+9676363b032ed841b3b0c586b6b95f03
   evalI ::
     MinHS.Evaluator.VEnv
     -> MinHS.Syntax.Exp -> GHC.Integer.Type.Integer
-  {- Arity: 2, Strictness: <L,A><S,1*U>,
-     Unfolding: InlineRule (2, True, False)
-                (\ (gamma :: MinHS.Evaluator.VEnv) (ds :: MinHS.Syntax.Exp) ->
-                 case ds of wild {
-                   DEFAULT -> MinHS.Evaluator.evalI1 MinHS.Syntax.Num n -> n }) -}
-ef584810577ee61f108311903a0d4dfc
-  evalI1 :: GHC.Integer.Type.Integer
-  {- Strictness: x -}
+  {- Arity: 2, Strictness: <L,A><S,1*U>, Inline: [2],
+     Unfolding: InlineRule (2, True, True)
+                (\ (w :: MinHS.Evaluator.VEnv) (w1 :: MinHS.Syntax.Exp) ->
+                 MinHS.Evaluator.$wevalI w1) -}
 ad64bb359abee62c301a87784de6d91d
   evaluate :: MinHS.Syntax.Program -> MinHS.Evaluator.Value
   {- Arity: 1, Strictness: <S,1*U>,
