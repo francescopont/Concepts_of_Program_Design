@@ -15,10 +15,10 @@ data Exp
     | If Exp Exp Exp
     | Let [Bind] Exp
     | Recfun Bind
-    | Letrec [Bind] Exp
+    | Letrec [Bind] Exp -- not for the basic assignment
     deriving (Read,Show,Eq)
 
-data Bind = Bind Id Type [Id] Exp
+data Bind = Bind Id Type [Id] Exp -- very usefulll
   deriving (Read,Show,Eq)
 
 data Op = Add
