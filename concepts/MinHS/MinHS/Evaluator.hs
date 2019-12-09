@@ -25,6 +25,7 @@ evaluate [Bind _ _ _ e] = evalE E.empty e
 evaluate bs = evalE E.empty (Let bs (Var "main"))
 
 -- Implement the interpreter as specified by the operational semantics.
+-- Con = constructor
 evalE :: VEnv -> Exp -> Value
 --numbers
 evalE gamma (Num n)= (I n)
@@ -51,8 +52,6 @@ evalE gamma (App (App ( Prim Lt) (expr1)) (expr2)) = (B ( (evalI gamma expr1) < 
 evalE gamma (App (App ( Prim Le) (expr1)) (expr2)) = (B ( (evalI gamma expr1) <= (evalI gamma expr2))) --le
 evalE gamma (App (App ( Prim Eq) (expr1)) (expr2)) = (B ( (evalI gamma expr1) == (evalI gamma expr2))) --eq
 evalE gamma (App (App ( Prim Ne) (expr1)) (expr2)) = (B ( (evalI gamma expr1) /= (evalI gamma expr2))) --ne
-
-
 -- head operator
 evalE gamma ( App (Prim Head) (App (App (Con "Cons")(Num n)) expr )   ) = (I n) -- we have only one case
 evalE gamma (App (Prim Head) (Con "Nil")) = error "List is empty!"
@@ -63,6 +62,9 @@ evalE gamma ( App (Prim Tail) (App (App (Con "Cons")(Num n)) expr )   ) = (evalE
 --null operator
 evalE gamma (App (Prim Null) (Con "Nil")) = (B True)
 evalE gamma (App (Prim Null) expr) = (B False)
+
+evalE gamma (If condExpr expr1 expr2) = evalIFCLAUSE  gamma (evalB gamma condExpr) expr1 expr2
+
 
 evalE gamma exp = error "Implement me!"
 -- MISSING PARTS
@@ -83,19 +85,21 @@ evalI gamma (App (App ( Prim Quot) (expr1)) (expr2)) = evalI gamma (App (App ( P
 evalI gamma (App ( Prim Neg) (expr1)) = ( (evalI gamma expr1)  * (-1)) -- neg
 
 
+evalIFCLAUSE :: VEnv -> Bool -> Exp -> Exp -> Value
+evalIFCLAUSE gamma True expr1 expr2 = evalE gamma expr1
+evalIFCLAUSE gamma False expr1 expr2 = evalE gamma expr2
 
--- to evaluate into Booleans (STILL USEFUL??)
+-- to evaluate into Booleans for the if-then-else clause
 evalB :: VEnv -> Exp -> Bool
 --case base
 evalB gamma (Con "True") = True
 evalB gamma (Con "False") = False
 -- primitive operations
-
-evalB gamma (App (App ( Prim Gt) (expr1)) (expr2)) = ( (evalB gamma expr1) >  (evalB gamma expr2)) --gt
-evalB gamma (App (App ( Prim Ge) (expr1)) (expr2)) = ( (evalB gamma expr1) >= (evalB gamma expr2)) --ge
-evalB gamma (App (App ( Prim Lt) (expr1)) (expr2)) = ( (evalB gamma expr1) <  (evalB gamma expr2)) --lt
-evalB gamma (App (App ( Prim Le) (expr1)) (expr2)) = ( (evalB gamma expr1) <= (evalB gamma expr2)) --le
-evalB gamma (App (App ( Prim Eq) (expr1)) (expr2)) = ( (evalB gamma expr1) == (evalB gamma expr2)) --eq
-evalB gamma (App (App ( Prim Ne) (expr1)) (expr2)) = ( (evalB gamma expr1) /= (evalB gamma expr2)) --ne
+evalB gamma (App (App ( Prim Gt) (expr1)) (expr2)) = ( (evalI gamma expr1) >  (evalI gamma expr2)) --gt
+evalB gamma (App (App ( Prim Ge) (expr1)) (expr2)) = ( (evalI gamma expr1) >= (evalI gamma expr2)) --ge
+evalB gamma (App (App ( Prim Lt) (expr1)) (expr2)) = ( (evalI gamma expr1) <  (evalI gamma expr2)) --lt
+evalB gamma (App (App ( Prim Le) (expr1)) (expr2)) = ( (evalI gamma expr1) <= (evalI gamma expr2)) --le
+evalB gamma (App (App ( Prim Eq) (expr1)) (expr2)) = ( (evalI gamma expr1) == (evalI gamma expr2)) --eq
+evalB gamma (App (App ( Prim Ne) (expr1)) (expr2)) = ( (evalI gamma expr1) /= (evalI gamma expr2)) --ne
 
 
