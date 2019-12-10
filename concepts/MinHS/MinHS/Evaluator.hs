@@ -10,6 +10,7 @@ data Value = I Integer
            | B Bool
            | Nil
            | Cons Integer Value
+           | Func Exp String -- added: the string represents the identifier of the variablw which is bounded in the function
            -- Add other variants as needed
            deriving (Show)
 
@@ -35,10 +36,7 @@ evalE gamma (Con "False") = (B False)
 --lists
 evalE gamma (Con "Nil") = Nil
 evalE gamma (App (App (Con "Cons") (Num n)) expr)   = (Cons n (evalE gamma expr))
-
-
 --PRIMITIVE OPERATIONS 
---integers operatons
 -- integers operations
 evalE gamma (App (App ( Prim Add) (expr1)) (expr2)) = sumV (evalE gamma expr1) (evalE gamma expr2)  -- add  
 evalE gamma (App (App ( Prim Sub) (expr1)) (expr2)) = subV (evalE gamma expr1) (evalE gamma expr2) -- sub  
@@ -62,11 +60,22 @@ evalE gamma ( App (Prim Tail) (App (App (Con "Cons")(Num n)) expr )   ) = (evalE
 evalE gamma (App (Prim Null) expr) = nullV (evalE gamma expr)
 -- if expression
 evalE gamma (If condExpr expr1 expr2) = ifV  gamma (evalE gamma condExpr) expr1 expr2
--- let bindings
-evalE gamma (Let [Bind (id) (ty) [] e] expr) =  evalE (E.add (gamma) (id ,( evalE gamma e))) expr
-evalE gamma (Var id) = case E.lookup gamma id of
-                          Just value -> value
-                          Nothing  -> error "variable is free in this context"
+-- let bindings for variables
+evalE gamma (Let [Bind (varId) (TypeCon x) [] varExpr] expr) =  evalE (E.add (gamma) (varId ,( evalE gamma varExpr))) expr
+evalE gamma (Var varId) = case E.lookup gamma varId of
+                          Just (I n) -> (I n)
+                          Just (B bool) -> (B bool)
+                          Just Nil -> Nil
+                          Just (Cons n val) -> (Cons n val)
+                          Nothing  -> error "variable is free in this environment"
+                          _ -> error "The environment is not able to provide something"
+--- let bindings for functions ( to test ABSOLUTELY)
+--START FROM HERE TOMORROW
+evalE gamma (Let [Bind (funId1) (Arrow domain range) [] (Recfun (Bind (funId2) (Arrow dom1 range1) [funVar] funExpr ))] expr) = evalE ( E.add (gamma) (funId1, (Func funExpr funVar)))  expr
+evalE gamma ( App ( Var funId) (actualParam)) = case E.lookup gamma funId of
+                                        Just (Func funExpr funVar) -> evalE (E.add (gamma)( funVar,(evalE gamma actualParam))) funExpr
+                                        _ -> error "Your programming is so bad man"
+evalE gamma (App (Recfun (Bind (funId) (Arrow dom1 range1) [funVar] funExpr )) actualParam ) = evalE (E.add (gamma)( funVar,(evalE gamma actualParam))) funExpr
 evalE gamma exp = error "Implement me!"
 
 
@@ -114,8 +123,8 @@ iffound :: Bool -> Value -> Value
 iffound True  returnValue = returnValue
 iffound False _ = error "the variable is free in this context"
 
-
 -- MISSING PARTS
+--recfun
 
 
 
