@@ -10,7 +10,8 @@ data Value = I Integer
            | B Bool
            | Nil
            | Cons Integer Value
-           | Func Exp String -- added: the string represents the identifier of the variablw which is bounded in the function
+           | Closure VEnv Exp   -- added the the exp represents the closure
+            
            -- Add other variants as needed
            deriving (Show)
 
@@ -35,49 +36,54 @@ evalE gamma (Con "True") = (B True)
 evalE gamma (Con "False") = (B False)
 --lists
 evalE gamma (Con "Nil") = Nil
-evalE gamma (App (App (Con "Cons") (Num n)) expr)   = (Cons n (evalE gamma expr))
+evalE gamma (App (App (Con "Cons") (expr1)) expr2)   = case evalE gamma expr1 of
+                                                        I n -> (Cons n (evalE gamma expr2))
+                                                        _ -> error "A list ca be composed only of integers"
+                                  
 --PRIMITIVE OPERATIONS 
 -- integers operations
 evalE gamma (App (App ( Prim Add) (expr1)) (expr2)) = sumV (evalE gamma expr1) (evalE gamma expr2)  -- add  
 evalE gamma (App (App ( Prim Sub) (expr1)) (expr2)) = subV (evalE gamma expr1) (evalE gamma expr2) -- sub  
 evalE gamma (App (App ( Prim Mul) (expr1)) (expr2)) = mulV (evalE gamma expr1) (evalE gamma expr2)-- mul
 evalE gamma (App (App ( Prim Quot) (expr1)) (expr2)) = quotV (evalE gamma expr1) (evalE gamma expr2) -- quot 
+evalE gamma (App (App ( Prim Rem) (expr1)) (expr2)) = remV (evalE gamma expr1) (evalE gamma expr2) -- quot  --ne
 evalE gamma (App ( Prim Neg) (expr1)) = mulV (evalE gamma expr1) (I (-1)) -- neg
 evalE gamma (App (App ( Prim Gt) (expr1)) (expr2)) = gtV (evalE gamma expr1) (evalE gamma expr2) --gt
 evalE gamma (App (App ( Prim Ge) (expr1)) (expr2)) = geV (evalE gamma expr1) (evalE gamma expr2)   --ge
 evalE gamma (App (App ( Prim Lt) (expr1)) (expr2)) = ltV (evalE gamma expr1) (evalE gamma expr2)   --lt
 evalE gamma (App (App ( Prim Le) (expr1)) (expr2)) = leV (evalE gamma expr1) (evalE gamma expr2) --le
-evalE gamma (App (App ( Prim Eq) (expr1)) (expr2)) = eqV (evalE gamma expr1) (evalE gamma expr2) -- quot  --eq
-evalE gamma (App (App ( Prim Ne) (expr1)) (expr2)) = neV (evalE gamma expr1) (evalE gamma expr2) -- quot  --ne
--- head operator
-evalE gamma (App (Prim Head) (Con "Nil")) = error "List is empty!"
-evalE gamma ( App (Prim Head) (App (App (Con "Cons")(Num n)) expr ))= evalE gamma ( Num n) -- the first value
---tail operator
-evalE gamma (App(Prim Tail) (Con "Nil")) = error "List is empty!"
-evalE gamma ( App (Prim Tail) (App (App (Con "Cons")(Num n)) (Con "Nil") )   ) = (Cons n Nil) -- base case: we are already at the tail
-evalE gamma ( App (Prim Tail) (App (App (Con "Cons")(Num n)) expr )   ) = (evalE gamma expr) -- induction case: we are not at the tail
---null operator
-evalE gamma (App (Prim Null) expr) = nullV (evalE gamma expr)
+evalE gamma (App (App ( Prim Eq) (expr1)) (expr2)) = eqV (evalE gamma expr1) (evalE gamma expr2)  --eq
+evalE gamma (App (App ( Prim Ne) (expr1)) (expr2)) = neV (evalE gamma expr1) (evalE gamma expr2) --ne
+evalE gamma (App (Prim Head) expr) = headV (evalE gamma expr) --head
+evalE gamma (App (Prim Tail) expr) = tailV (evalE gamma expr) --tail
+evalE gamma (App (Prim Null) expr) = nullV (evalE gamma expr) --null
+
 -- if expression
 evalE gamma (If condExpr expr1 expr2) = ifV  gamma (evalE gamma condExpr) expr1 expr2
 -- let bindings for variables
-evalE gamma (Let [Bind (varId) (TypeCon x) [] varExpr] expr) =  evalE (E.add (gamma) (varId ,( evalE gamma varExpr))) expr
 evalE gamma (Var varId) = case E.lookup gamma varId of
                           Just (I n) -> (I n)
                           Just (B bool) -> (B bool)
-                          Just Nil -> Nil
+                          Just (Nil) -> (Nil)
                           Just (Cons n val) -> (Cons n val)
-                          Nothing  -> error "variable is free in this environment"
-                          _ -> error "The environment is not able to provide something"
---- let bindings for functions ( to test ABSOLUTELY)
---START FROM HERE TOMORROW
-evalE gamma (Let [Bind (funId1) (Arrow domain range) [] (Recfun (Bind (funId2) (Arrow dom1 range1) [funVar] funExpr ))] expr) = evalE ( E.add (gamma) (funId1, (Func funExpr funVar)))  expr
-evalE gamma ( App ( Var funId) (actualParam)) = case E.lookup gamma funId of
-                                        Just (Func funExpr funVar) -> evalE (E.add (gamma)( funVar,(evalE gamma actualParam))) funExpr
-                                        _ -> error "Your programming is so bad man"
-evalE gamma (App (Recfun (Bind (funId) (Arrow dom1 range1) [funVar] funExpr )) actualParam ) = evalE (E.add (gamma)( funVar,(evalE gamma actualParam))) funExpr
-evalE gamma exp = error "Implement me!"
+                          Just (Closure gamma expr) -> (Closure gamma expr)
+                          Nothing  -> error "Should I implement this?"
+-- variable binding with let
+evalE gamma (Let [Bind varId ty [] varExpr] expr) =  evalE (E.add gamma (varId ,( evalE gamma varExpr))) expr
+--recursive
+evalE gamma (Recfun (Bind funId typ [] funExpr )) = evalE (E.add gamma (funId, (evalE gamma funExpr))) funExpr
+--evalE gamma (Recfun (Bind (funId) typ [] funExpr )) = Closure gamma (Recfun (Bind (funId) typ [] funExpr )) 
 
+-- how to introduce the closures 
+evalE gamma (Recfun (Bind (funId) typ [funVar] funExpr )) = Closure gamma (Recfun (Bind (funId) typ [funVar] funExpr )) 
+--function application
+evalE gamma (App (expr1) (expr2)) = case evalE gamma expr1 of
+                                      Closure gamma1 (Recfun(Bind (funId) typ [funVar] funExpr )) -> evalE (E.addAll gamma1 [(funVar, (evalE gamma expr2)), (funId, (Closure gamma1 (Recfun(Bind (funId) typ [funVar] funExpr )))) ]) funExpr
+                                      _ -> error "Ciao"
+
+evalE gamma expr = error "implement me!"
+
+--FUNCTIONS BETWEEN 
 
 sumV :: Value -> Value -> Value
 sumV (I n1) (I n2) = (I (n1 + n2))
@@ -91,6 +97,10 @@ mulV (I n1) (I n2) = (I (n1 * n2))
 quotV :: Value -> Value -> Value
 quotV (I n1) ( I 0) = error "Cannot divide by 0"
 quotV (I n1) ( I n2) = (I ( quot n1 n2))
+
+remV :: Value -> Value -> Value
+remV (I n1) ( I 0) = error "Cannot divide by 0"
+remV (I n1) ( I n2) = (I ( rem n1 n2))
 
 gtV :: Value -> Value -> Value
 gtV (I n1) (I n2) = (B ( n1 > n2))
@@ -110,70 +120,36 @@ eqV (I n1) (I n2) = (B ( n1 == n2))
 neV :: Value -> Value -> Value
 neV (I n1) (I n2) = (B ( n1 /= n2))
 
+headV :: Value -> Value
+headV Nil = error "List is empty!"
+headV (Cons n value) = (I n)
+
+tailV :: Value -> Value
+tailV Nil = error "List is empty!"
+tailV (Cons n value) = value
+
 nullV :: Value -> Value
 nullV Nil = (B True)
-nullV (Cons n val) = (B False)
+nullV (Cons n value) = (B False)
 
 ifV :: VEnv -> Value -> Exp -> Exp -> Value
 ifV gamma (B True) expr1 expr2 = evalE gamma expr1
 ifV gamma (B False) expr1 expr2 = evalE gamma expr2
 
--- still useful
-iffound :: Bool -> Value -> Value
-iffound True  returnValue = returnValue
-iffound False _ = error "the variable is free in this context"
 
 -- MISSING PARTS
 --recfun
+-- currying
+--recursion
+-- functions with multiple arguments (?)
+-- read better the specs (particularly the big step semantics)
+-- implement the rem with haskell rem function
 
 
 
+--[Bind "main" (TypeApp (TypeCon List) (TypeCon Int)) [] (Let [Bind "ones" (TypeApp (TypeCon List) (TypeCon Int)) [] (Recfun (Bind "ones" (TypeApp (TypeCon List) (TypeCon Int)) [] (App (App (Con "Cons") (Num 1)) (Var "ones"))))] 
+ -- (App () (App (App () (App () ()) (Con "Nil"))))]
 
 
-
-
---integers operations
---evalE gamma (App (App ( Prim Add) (expr1)) (expr2)) = (I ( (evalI gamma expr1)  + (evalI gamma expr2)))-- add  
---evalE gamma (App (App ( Prim Sub) (expr1)) (expr2)) = (I ( (evalI gamma expr1)  - (evalI gamma expr2))) -- sub  
---evalE gamma (App (App ( Prim Mul) (expr1)) (expr2)) = (I ( (evalI gamma expr1)  * (evalI gamma expr2)))-- mul
---evalE gamma (App (App ( Prim Quot) (expr1)) (Num 0)) = error "Cannot divide by 0!" -- complex separated code to handle division by 0
---evalE gamma (App (App ( Prim Quot) (expr1)) (Num n)) = (I ( quot (evalI gamma expr1) n ))-- quot
---evalE gamma (App (App ( Prim Quot) (expr1)) (expr2)) = evalE gamma (App (App ( Prim Quot) (expr1)) (Num (evalI gamma expr2))) -- quot 
---evalE gamma (App (App ( Prim Rem) (expr1)) (expr2)) = (I ( (evalI gamma expr1)  % (evalI gamma expr2))) -- rem
---booleans operations
---evalE gamma (App (App ( Prim Gt) (expr1)) (expr2)) = (B ( (evalI gamma expr1) > (evalI gamma expr2))) --gt
---evalE gamma (App (App ( Prim Ge) (expr1)) (expr2)) = (B ( (evalI gamma expr1) >= (evalI gamma expr2))) --ge
---evalE gamma (App (App ( Prim Lt) (expr1)) (expr2)) = (B ( (evalI gamma expr1) < (evalI gamma expr2))) --lt
---evalE gamma (App (App ( Prim Le) (expr1)) (expr2)) = (B ( (evalI gamma expr1) <= (evalI gamma expr2))) --le
---evalE gamma (App (App ( Prim Eq) (expr1)) (expr2)) = (B ( (evalI gamma expr1) == (evalI gamma expr2))) --eq
---evalE gamma (App (App ( Prim Ne) (expr1)) (expr2)) = (B ( (evalI gamma expr1) /= (evalI gamma expr2))) --ne
-
--- to evaluate into Integers
---evalI :: VEnv -> Exp -> Integer
--- case base
---evalI gamma (Num n)= n
---evalI gamma (Var id) = E.lookup gamma id
---primitive operations
---evalI gamma (App (App ( Prim Add) (expr1)) (expr2))  = ( (evalI gamma expr1)  + (evalI gamma expr2)) -- add
---evalI gamma (App (App ( Prim Sub) (expr1)) (expr2))  = ( (evalI gamma expr1)  - (evalI gamma expr2)) -- sub
---evalI gamma (App (App ( Prim Mul) (expr1)) (expr2))  = ( (evalI gamma expr1)  * (evalI gamma expr2)) -- mul
---evalI gamma (App (App ( Prim Quot) (expr1)) (Num 0)) = error "Cannot divide by 0" -- quot
---evalI gamma (App (App ( Prim Quot) (expr1)) (Num n)) = (quot (evalI gamma expr1) n )-- quot
---evalI gamma (App (App ( Prim Quot) (expr1)) (expr2)) = evalI gamma (App (App ( Prim Quot) (expr1)) (Num (evalI gamma expr2))) -- quot --evalI gamma (App (App ( Prim Rem) (expr1)) (expr2)) = ( (evalI gamma expr1)  % (evalI gamma expr1)) -- rem
---evalI gamma (App ( Prim Neg) (expr1)) = ( (evalI gamma expr1)  * (-1)) -- neg
-
-
--- to evaluate into Booleans for the if-then-else clause
---evalB :: VEnv -> Exp -> Bool
---case base
---evalB gamma (Con "True") = True
---evalB gamma (Con "False") = False
--- primitive operations
---evalB gamma (App (App ( Prim Gt) (expr1)) (expr2)) = ( (evalI gamma expr1) >  (evalI gamma expr2)) --gt
---evalB gamma (App (App ( Prim Ge) (expr1)) (expr2)) = ( (evalI gamma expr1) >= (evalI gamma expr2)) --ge
---evalB gamma (App (App ( Prim Lt) (expr1)) (expr2)) = ( (evalI gamma expr1) <  (evalI gamma expr2)) --lt
---evalB gamma (App (App ( Prim Le) (expr1)) (expr2)) = ( (evalI gamma expr1) <= (evalI gamma expr2)) --le
---evalB gamma (App (App ( Prim Eq) (expr1)) (expr2)) = ( (evalI gamma expr1) == (evalI gamma expr2)) --eq
---evalB gamma (App (App ( Prim Ne) (expr1)) (expr2)) = ( (evalI gamma expr1) /= (evalI gamma expr2)) --ne
 
 

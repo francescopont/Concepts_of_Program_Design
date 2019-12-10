@@ -1,10 +1,10 @@
 
 ==================== FINAL INTERFACE ====================
-2019-12-09 23:29:57.9696746 UTC
+2019-12-10 18:24:18.2981011 UTC
 
 interface main:Main 8065
-  interface hash: b730d2fe529d1af0514e379811ec92b2
-  ABI hash: 4a38ec90b462e2d08a0f71fd9ad7997a
+  interface hash: 25f51e756e681e4cc65c541ddbc8fca3
+  ABI hash: 14aead3beedfdd67f4ad9afabf7ea579
   export-list hash: 4ed631f2b99f960f75c8c699ad166405
   orphan hash: 693e9af84d3dfcc71e640e005bdc5e2e
   flag hash: 940645c91f96fac14a226b1431433777
@@ -62,9 +62,9 @@ import  -/  base-4.12.0.0:GHC.Show fa6032f3f820e8e8ec87b97bdca4e160
 import  -/  base-4.12.0.0:Prelude 80c668cb99fbafebd524c5e897f8c982
 import  -/  base-4.12.0.0:System.IO 51ffc52e2e8495d5c7b596557cf2be89
 import  -/  ghc-prim-0.5.3:GHC.Types 57064c9f957b09bc2e360061ad5cae0b
-import  -/  MinHS.Evaluator 7a7e10dc64dbf0575ff7b6e4368b135c
-  exports: 6a81dd987f9b718a5f19382e901748d5
-  evaluate b5c53ab75993bc96901841b9f20fd1aa
+import  -/  MinHS.Evaluator 2f09b099e2092af237072d2766f777aa
+  exports: b0d337ae45bc2141a5441990db612ffa
+  evaluate b1789fb753549f64cbef1f6585af6672
 import  -/  MinHS.Parse 7f24a9e9cef383fc4fbaf8bdd5398dc2
   exports: 584fc76b75fcb5b8289001641ff2f257
   parseProgram 886f77f0b533a4f385ea5e4cad10e7e2
@@ -127,12 +127,12 @@ d026be77cb9ced20e35a61514e0458aa
                     (Sym (GHC.Types.N:IO[0] <()>_R)) #)) -}
 7fb580d8811c88ac0e8ac542d570fb5c
   type Action a b = a -> Data.Either.Either (GHC.Types.IO ()) b
-a882ab9071f4d39819daa367064e7cdc
+e21e0526ff6976db28362d21a4359df4
   main :: GHC.Types.IO ()
   {- Arity: 1, Strictness: <S,U>,
      Unfolding: InlineRule (0, True, True)
                 Main.main1 `cast` (Sym (GHC.Types.N:IO[0] <()>_R)) -}
-7d7d19660b9a3dea823c6eeb9379b0f5
+120bc1fc23d2e5f769a8edacbc39264d
   main1 ::
     GHC.Prim.State# GHC.Prim.RealWorld
     -> (# GHC.Prim.State# GHC.Prim.RealWorld, () #)
@@ -244,7 +244,7 @@ ae9c653b058e83667a9bddb93674f580
                                                                                                        <Control.Monad.Trans.Except.Except
                                                                                                           Options.Applicative.Types.ParseError>_R
                                                                                                        <GHC.IO.FilePath>_N) ; Sym (Options.Applicative.Types.N:ReadM[0]) <GHC.IO.FilePath>_N))) -}
-6e672b7b54eefcb3ec66642d6fd8e129
+281321e86599d00416307e4c69888b37
   main17 ::
     Options.Applicative.Types.Parser
       (GHC.IO.FilePath
@@ -287,7 +287,7 @@ ae9c653b058e83667a9bddb93674f580
                    @ (Text.PrettyPrint.ANSI.Leijen.Internal.Doc
                       -> Text.PrettyPrint.ANSI.Leijen.Internal.Doc)
                    Main.main20) -}
-e87e228f2b5eb92352821eacebe97e90
+c1962c80f4e09bec4d1175246e5376d0
   main2 ::
     Options.Applicative.Types.ParserInfo
       ((Text.PrettyPrint.ANSI.Leijen.Internal.Doc
@@ -412,7 +412,7 @@ d1014b140d7993491d66e09bf782fb5c
 fe2b7e40319c343f90410c67a9427061
   main31 :: GHC.Prim.Addr#
   {- HasNoCafRefs, Unfolding: ("no-colour"#) -}
-69b317722807cad9aa39f8fb663ccf8a
+8fb553d3e24d99627e33ae0d648a1472
   main32 ::
     Options.Applicative.Types.Parser
       ((Text.PrettyPrint.ANSI.Leijen.Internal.Doc
@@ -445,7 +445,7 @@ fe2b7e40319c343f90410c67a9427061
                          -> Text.PrettyPrint.ANSI.Leijen.Internal.Doc)
                       @ GHC.IO.FilePath)
                    Main.main33) -}
-438f4ef1d0c4b28bcffb0a9927620d47
+dfb49afae78d2d657b1bc5cb9e00556e
   main33 ::
     Options.Applicative.Types.Parser
       ((Text.PrettyPrint.ANSI.Leijen.Internal.Doc
@@ -458,7 +458,7 @@ fe2b7e40319c343f90410c67a9427061
                       -> Main.Action GHC.Base.String (GHC.Types.IO ()))
                    Main.main37
                    Main.main34) -}
-8e764e2351d633d430b3d6845d0af16f
+7d02ecafc2d1a6abd044e772a7969294
   main34 ::
     Options.Applicative.Types.Parser
       ((Text.PrettyPrint.ANSI.Leijen.Internal.Doc
@@ -470,7 +470,7 @@ fe2b7e40319c343f90410c67a9427061
                        -> Text.PrettyPrint.ANSI.Leijen.Internal.Doc)
                       -> Main.Action GHC.Base.String (GHC.Types.IO ()))
                    Main.main35) -}
-30976759032cc25574ae3c5edb79772e
+8b883c6a4ddaf1327855847311601714
   main35 ::
     GHC.Maybe.Maybe
       ((Text.PrettyPrint.ANSI.Leijen.Internal.Doc
@@ -489,7 +489,7 @@ fe2b7e40319c343f90410c67a9427061
                    (GHC.Types.[] @ GHC.Types.Char)
                    1#
                    1#) -}
-85e7899eaf05cf3447d8603f7d6a7dd3
+a733f1b5a2f4aad645cca52937fcec00
   main37 ::
     Options.Applicative.Types.Parser
       ((Text.PrettyPrint.ANSI.Leijen.Internal.Doc
@@ -501,7 +501,7 @@ fe2b7e40319c343f90410c67a9427061
                        -> Text.PrettyPrint.ANSI.Leijen.Internal.Doc)
                       -> Main.Action GHC.Base.String (GHC.Types.IO ()))
                    Main.main38) -}
-d3ea8f78ad59bc55bbcf74f556170d94
+49be35d787ebd061cd980beb72df3bbd
   main38 ::
     Options.Applicative.Types.Option
       ((Text.PrettyPrint.ANSI.Leijen.Internal.Doc
@@ -546,7 +546,7 @@ c9ff9098547d556488697ad827e6c3d6
   {- HasNoCafRefs,
      Unfolding: ("stage after which to dump the current state. \n\
                  \                           [parser,parser-raw,typechecker,evaluator]"#) -}
-fa70d17d0e733a73171848481e7bf9af
+ead7531ad4dc042160a1e261dd343413
   main44 ::
     Options.Applicative.Types.OptReader
       ((Text.PrettyPrint.ANSI.Leijen.Internal.Doc
@@ -560,7 +560,7 @@ fa70d17d0e733a73171848481e7bf9af
                    Main.main63
                    Main.main45
                    Options.Applicative.Types.ExpectsArgError) -}
-ba9a2d1e55aa21b8ea7e9f47dd0e154a
+eccaab3e2cffc62608fff49e7d8ada88
   main45 ::
     Options.Applicative.Types.CReader
       ((Text.PrettyPrint.ANSI.Leijen.Internal.Doc
@@ -596,7 +596,7 @@ ba9a2d1e55aa21b8ea7e9f47dd0e154a
                                                                                                     ())
                                                                                                  (GHC.Types.IO
                                                                                                     ())>_N)) -}
-ae3ff8c9f89950e81c50ef36953b3d40
+877d4188732ac83ee259453aa65bfa60
   main46 ::
     GHC.Base.String
     -> Control.Monad.Trans.Except.ExceptT
@@ -737,7 +737,7 @@ ae3ff8c9f89950e81c50ef36953b3d40
                                                                                 GHC.Base.String
                                                                                 (GHC.Types.IO
                                                                                    ())>_N))) }) -}
-e1866df96bc21109584d4cbd60f2b032
+79b7047ab8a4436a1885d42fd6e4665e
   main47 ::
     Data.Either.Either
       Options.Applicative.Types.ParseError
@@ -1138,7 +1138,7 @@ cb23642e99f5b7ad6d113d5ad380037e
 d61a4313ed46694d524ea5504882c065
   main66 :: GHC.Prim.Addr#
   {- HasNoCafRefs, Unfolding: ("dump"#) -}
-5d9f53b4314e4c1b99eebcdaded64357
+39d366b1d73d49e79b0c3cdee7a32336
   main67 ::
     GHC.Prim.State# GHC.Prim.RealWorld
     -> (# GHC.Prim.State# GHC.Prim.RealWorld, () #)
@@ -1146,7 +1146,7 @@ d61a4313ed46694d524ea5504882c065
      Unfolding: (GHC.TopHandler.runMainIO1
                    @ ()
                    Main.main1 `cast` (Sym (GHC.Types.N:IO[0] <()>_R))) -}
-dd055f2046d1414cdc1f22072d933aed
+7394ad03604fb4771d53a4859ffb6ae0
   main7 ::
     Options.Applicative.Types.Parser
       ((Text.PrettyPrint.ANSI.Leijen.Internal.Doc
@@ -1176,7 +1176,7 @@ dd055f2046d1414cdc1f22072d933aed
                          -> Text.PrettyPrint.ANSI.Leijen.Internal.Doc,
                          GHC.IO.FilePath))
                    Main.main8) -}
-3be717d47629d729f4ff470cf102f6ef
+ec22b5bd597f1f4d5117773958a85d45
   main8 ::
     Options.Applicative.Types.Parser
       ((Text.PrettyPrint.ANSI.Leijen.Internal.Doc
@@ -1215,7 +1215,7 @@ a159cf654de3ae19a00b40fc982d2f58
                    (w1 :: MinHS.Syntax.Program) ->
                  case Main.$w$sprinter w w1 of ww { Unit# ww1 ->
                  Data.Either.Right @ (GHC.Types.IO ()) @ (GHC.Types.IO ()) ww1 }) -}
-60bf7daf82002b6b80b917a0ef71ca38
+e4c2b94a8dac3e0ff9481f65c0450d2e
   main_evaluatorAction ::
     (Text.PrettyPrint.ANSI.Leijen.Internal.Doc
      -> Text.PrettyPrint.ANSI.Leijen.Internal.Doc)

@@ -15,7 +15,7 @@ data Exp
     | If Exp Exp Exp
     | Let [Bind] Exp
     | Recfun Bind
-    | Letrec [Bind] Exp -- not for the basic assignment
+    | Letrec [Bind] Exp -- not for the basic assignment ( do not care now)
     deriving (Read,Show,Eq)
 
 data Bind = Bind Id Type [Id] Exp -- very usefulll
@@ -39,7 +39,7 @@ data Op = Add
         deriving (Show, Eq, Read)
 
 data Type = Arrow Type Type
-          | TypeApp Type Type
+          | TypeApp Type Type -- is it ever used?
           | TypeCon TyCon
           deriving (Read, Show, Eq, Ord)
 
