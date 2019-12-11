@@ -11,7 +11,8 @@ data Value = I Integer
           | Nil
           | Cons Integer Value
           | Closure VEnv Exp   -- added the the exp represents the closure ( the closure contains )
-          | Partial Exp  -- added to represent partial evaluation ( task 2)
+          | PartPrimOp Exp  -- added to represent PartPrimOp evaluation ( task 2)
+          | FreeClosure VEnv Exp -- added to represent partially evaluated functions ( task 3)
            -- Add other variants as needed
            deriving (Show)
 
@@ -67,27 +68,29 @@ evalE gamma (Var varId) = case E.lookup gamma varId of
                           Just (Nil) -> (Nil)
                           Just (Cons n val) -> (Cons n val)
                           Just (Closure gamma expr) -> (Closure gamma expr)
-                          Just (Partial expr) -> (Partial expr)
+                          Just (PartPrimOp expr) -> (PartPrimOp expr)
+                          Just (FreeClosure gamma expr) -> (FreeClosure gamma expr)
                           Nothing  -> error "Should I implement this?"
 -- variable binding with let
-evalE gamma (Let [Bind varId ty [] varExpr] expr) =  evalE (E.add gamma (varId ,( evalE gamma varExpr))) expr
+evalE gamma (Let [(Bind varId ty [] varExpr), bind2] expr) =  evalE (E.add gamma (varId ,( evalE gamma varExpr))) (Let [bind2] expr) --(task2)
+evalE gamma (Let [Bind varId ty [] varExpr] expr) =  evalE (E.add gamma (varId ,( evalE gamma varExpr)))  expr
 --task2 
-evalE gamma (App (Prim Add) expr) = Partial  (App (Prim Add) expr)--add
-evalE gamma (App (Prim Sub) expr) = Partial  (App (Prim Sub) expr) --sub
-evalE gamma (App (Prim Mul) expr) = Partial  (App (Prim Mul) expr) --mul
-evalE gamma (App (Prim Quot) expr) = Partial  (App (Prim Quot) expr) --quot
-evalE gamma (App (Prim Rem) expr) = Partial  (App (Prim Rem) expr)  --rem
-evalE gamma (Prim Neg)  = Partial  (Prim Neg)  --neg
-evalE gamma (App (Prim Gt) expr) = Partial  (App (Prim Gt) expr) --gt
-evalE gamma (App (Prim Ge) expr) = Partial  (App (Prim Ge) expr) --ge
-evalE gamma (App (Prim Lt) expr) = Partial  (App (Prim Lt) expr) --lt
-evalE gamma (App (Prim Le) expr) = Partial  (App (Prim Le) expr) --le
-evalE gamma (App (Prim Eq) expr) = Partial  (App (Prim Eq) expr) --eq
-evalE gamma (App (Prim Ne) expr) = Partial  (App (Prim Ne) expr) --ne
-evalE gamma (Prim Head)  = Partial  (Prim Head)  --head
-evalE gamma (Prim Tail)  = Partial  (Prim Tail)  --tail
-evalE gamma (Prim Null)  = Partial  (Prim Null)  --null
-evalE gamma (App (Con "Cons") (expr1)) = Partial (App (Con "Cons") (expr1)) --cons
+evalE gamma (App (Prim Add) expr) = PartPrimOp  (App (Prim Add) expr)--add
+evalE gamma (App (Prim Sub) expr) = PartPrimOp  (App (Prim Sub) expr) --sub
+evalE gamma (App (Prim Mul) expr) = PartPrimOp  (App (Prim Mul) expr) --mul
+evalE gamma (App (Prim Quot) expr) = PartPrimOp  (App (Prim Quot) expr) --quot
+evalE gamma (App (Prim Rem) expr) = PartPrimOp  (App (Prim Rem) expr)  --rem
+evalE gamma (Prim Neg)  = PartPrimOp  (Prim Neg)  --neg
+evalE gamma (App (Prim Gt) expr) = PartPrimOp  (App (Prim Gt) expr) --gt
+evalE gamma (App (Prim Ge) expr) = PartPrimOp  (App (Prim Ge) expr) --ge
+evalE gamma (App (Prim Lt) expr) = PartPrimOp  (App (Prim Lt) expr) --lt
+evalE gamma (App (Prim Le) expr) = PartPrimOp  (App (Prim Le) expr) --le
+evalE gamma (App (Prim Eq) expr) = PartPrimOp  (App (Prim Eq) expr) --eq
+evalE gamma (App (Prim Ne) expr) = PartPrimOp  (App (Prim Ne) expr) --ne
+evalE gamma (Prim Head)  = PartPrimOp  (Prim Head)  --head
+evalE gamma (Prim Tail)  = PartPrimOp  (Prim Tail)  --tail
+evalE gamma (Prim Null)  = PartPrimOp  (Prim Null)  --null
+evalE gamma (App (Con "Cons") (expr1)) = PartPrimOp (App (Con "Cons") (expr1)) --cons
 
 
 
@@ -99,9 +102,11 @@ evalE gamma (Recfun (Bind funId typ [] funExpr )) = evalE (E.add gamma (funId, (
 evalE gamma (Recfun (Bind (funId) typ varList funExpr )) = Closure gamma (Recfun (Bind (funId) typ varList funExpr )) 
 --function application
 evalE gamma (App (expr1) (expr2)) = case evalE gamma expr1 of
-                                      Partial partExpr -> evalE gamma (App partExpr expr2)
-                                      Closure gamma1 (Recfun(Bind (funId) typ [ funVar , funVar2] funExpr )) -> evalE (E.addAll gamma1 [(funVar, (evalE gamma expr2)), (funId, (Closure gamma1 (Recfun(Bind (funId) typ [ funVar , funVar2] funExpr )))) ]) (Recfun (Bind (funId) typ [funVar2] funExpr )) 
+                                      PartPrimOp partExpr -> evalE gamma (App partExpr expr2)
+                                      Closure gamma1 (Recfun(Bind (funId) typ [ funVar , funVar2] funExpr )) -> FreeClosure (E.addAll gamma1 [(funVar, (evalE gamma expr2)), (funId, (Closure gamma1 (Recfun(Bind (funId) typ [ funVar , funVar2] funExpr )))) ]) (Recfun (Bind (funId) typ [funVar2] funExpr )) 
                                       Closure gamma1 (Recfun(Bind (funId) typ [funVar] funExpr )) ->   evalE (E.addAll gamma1 [(funVar, (evalE gamma expr2)), (funId, (Closure gamma1 (Recfun(Bind (funId) typ [funVar] funExpr )))) ])          funExpr
+                                      FreeClosure gamma1 (Recfun(Bind (funId) typ [ funVar , funVar2] funExpr )) -> FreeClosure (E.add gamma1 (funVar, (evalE gamma expr2))) (Recfun (Bind (funId) typ [funVar2] funExpr )) 
+                                      FreeClosure gamma1 (Recfun(Bind (funId) typ [funVar] funExpr )) ->   evalE (E.add gamma1 (funVar, (evalE gamma expr2)))          funExpr
                                       _ -> error "Ciao"
 
 

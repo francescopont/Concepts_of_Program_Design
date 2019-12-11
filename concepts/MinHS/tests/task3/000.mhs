@@ -1,4 +1,4 @@
-main :: Bool
-= let eq :: (Int -> Int -> Bool)
-= recfun eq :: (Int -> Int -> Bool) x y = x == y;
+main :: Int
+= let eq :: (Int -> Int -> Int)
+= recfun eq :: (Int -> Int -> Int) x y = if ( x == 0) then x else ( (eq (x-1) y) + y);
 in eq 3 4;

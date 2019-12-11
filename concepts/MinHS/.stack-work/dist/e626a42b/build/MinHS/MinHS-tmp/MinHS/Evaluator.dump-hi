@@ -1,11 +1,11 @@
 
 ==================== FINAL INTERFACE ====================
-2019-12-11 17:05:38.3461204 UTC
+2019-12-11 23:38:53.5851916 UTC
 
 interface main:MinHS.Evaluator 8065
-  interface hash: 1c816f1dd03e028fdec13ef368f0a499
-  ABI hash: d31fb96d53a603e8b064498e6450c304
-  export-list hash: 4fe1e407b61effcde5635f7094ed794a
+  interface hash: fbf4c80516128e6b527e95e7977fb452
+  ABI hash: a5bdd107fae9eec786a9d82ac6bc2d8e
+  export-list hash: d6e736249ab277f2e2d3bfce51cb547d
   orphan hash: 693e9af84d3dfcc71e640e005bdc5e2e
   flag hash: 0389d9b0cf9d29ba8d9c35ce4102d769
   opt_hash: 6faf2de08de32d19db9870899d88e59a
@@ -33,7 +33,7 @@ exports:
   MinHS.Evaluator.sumV
   MinHS.Evaluator.tailV
   MinHS.Evaluator.VEnv
-  MinHS.Evaluator.Value{MinHS.Evaluator.B MinHS.Evaluator.Closure MinHS.Evaluator.Cons MinHS.Evaluator.I MinHS.Evaluator.Nil MinHS.Evaluator.Partial}
+  MinHS.Evaluator.Value{MinHS.Evaluator.B MinHS.Evaluator.Closure MinHS.Evaluator.Cons MinHS.Evaluator.FreeClosure MinHS.Evaluator.I MinHS.Evaluator.Nil MinHS.Evaluator.PartPrimOp}
 module dependencies: MinHS.Env MinHS.Pretty MinHS.Syntax
                      MinHS.TypeChecker
 package dependencies: Win32-2.6.1.0 ansi-terminal-0.9.1
@@ -102,7 +102,7 @@ import  -/  MinHS.Syntax a27359a8aa4022e86f719300174c8c96
   Sub 03abce1f7bffdc2aba19ac49f8463cae
   Tail 4a5f026ce2bfac5cd299f9a6a5c26827
   Var 05fb7e6ba55ebe50f82496bc50b23add
-4f6363ee2bfaf829cce439ce89b1ad5c
+da30df3db90d9e22820aa7b84d61db9c
   $fPrettyValue ::
     Text.PrettyPrint.ANSI.Leijen.Internal.Pretty MinHS.Evaluator.Value
   DFunId
@@ -111,11 +111,11 @@ import  -/  MinHS.Syntax a27359a8aa4022e86f719300174c8c96
                   @ MinHS.Evaluator.Value
                   MinHS.Evaluator.$fPrettyValue_$cpretty
                   MinHS.Evaluator.$fPrettyValue_$cprettyList -}
-4f6363ee2bfaf829cce439ce89b1ad5c
+da30df3db90d9e22820aa7b84d61db9c
   $fPrettyValue_$cpretty ::
     MinHS.Evaluator.Value -> Text.PrettyPrint.ANSI.Leijen.Internal.Doc
   {- Arity: 1, Strictness: <S,1*U> -}
-4f6363ee2bfaf829cce439ce89b1ad5c
+da30df3db90d9e22820aa7b84d61db9c
   $fPrettyValue_$cprettyList ::
     [MinHS.Evaluator.Value]
     -> Text.PrettyPrint.ANSI.Leijen.Internal.Doc
@@ -143,7 +143,7 @@ import  -/  MinHS.Syntax a27359a8aa4022e86f719300174c8c96
                             MinHS.Evaluator.$fPrettyValue_$cpretty)
                          n
                          x))) -}
-4f6363ee2bfaf829cce439ce89b1ad5c
+da30df3db90d9e22820aa7b84d61db9c
   $fShowValue :: GHC.Show.Show MinHS.Evaluator.Value
   DFunId
   {- Strictness: m, Inline: CONLIKE,
@@ -152,7 +152,7 @@ import  -/  MinHS.Syntax a27359a8aa4022e86f719300174c8c96
                   MinHS.Evaluator.$fShowValue_$cshowsPrec
                   MinHS.Evaluator.$fShowValue_$cshow
                   MinHS.Evaluator.$fShowValue_$cshowList -}
-4f6363ee2bfaf829cce439ce89b1ad5c
+da30df3db90d9e22820aa7b84d61db9c
   $fShowValue1 :: MinHS.Evaluator.Value -> GHC.Show.ShowS
   {- Arity: 1,
      Unfolding: (MinHS.Evaluator.$fShowValue_$cshowsPrec
@@ -160,7 +160,7 @@ import  -/  MinHS.Syntax a27359a8aa4022e86f719300174c8c96
 3e4836ad1d8169f86727d58b63a81d33
   $fShowValue2 :: GHC.Types.Int
   {- HasNoCafRefs, Strictness: m, Unfolding: (GHC.Types.I# 0#) -}
-4f6363ee2bfaf829cce439ce89b1ad5c
+da30df3db90d9e22820aa7b84d61db9c
   $fShowValue_$cshow :: MinHS.Evaluator.Value -> GHC.Base.String
   {- Arity: 1, Strictness: <S,1*U>,
      Unfolding: InlineRule (1, True, False)
@@ -169,7 +169,7 @@ import  -/  MinHS.Syntax a27359a8aa4022e86f719300174c8c96
                    MinHS.Evaluator.$fShowValue2
                    x
                    (GHC.Types.[] @ GHC.Types.Char)) -}
-4f6363ee2bfaf829cce439ce89b1ad5c
+da30df3db90d9e22820aa7b84d61db9c
   $fShowValue_$cshowList :: [MinHS.Evaluator.Value] -> GHC.Show.ShowS
   {- Arity: 2, Strictness: <S,1*U><L,U>,
      Unfolding: InlineRule (2, True, False)
@@ -179,7 +179,7 @@ import  -/  MinHS.Syntax a27359a8aa4022e86f719300174c8c96
                    MinHS.Evaluator.$fShowValue1
                    ls
                    s) -}
-4f6363ee2bfaf829cce439ce89b1ad5c
+da30df3db90d9e22820aa7b84d61db9c
   $fShowValue_$cshowsPrec ::
     GHC.Types.Int -> MinHS.Evaluator.Value -> GHC.Show.ShowS
   {- Arity: 2, Strictness: <L,1*U(U)><S,1*U> -}
@@ -243,6 +243,23 @@ ee1ef239f6f15265283bc5975d34e836
 250daadd4a626f246c6ad74f1cb46d57
   $tc'Cons3 :: GHC.Prim.Addr#
   {- HasNoCafRefs, Unfolding: ("'Cons"#) -}
+9b74e64f94f8c9d6a59fecfe70c7fd8c
+  $tc'FreeClosure :: GHC.Types.TyCon
+  {- HasNoCafRefs, Strictness: m,
+     Unfolding: (GHC.Types.TyCon
+                   8478857277684474540##
+                   5798492847221998746##
+                   MinHS.Evaluator.$trModule
+                   MinHS.Evaluator.$tc'FreeClosure1
+                   0#
+                   MinHS.Evaluator.$tc'Closure1) -}
+1f46765c82164ef8da249bb81c5cc215
+  $tc'FreeClosure1 :: GHC.Types.TrName
+  {- HasNoCafRefs, Strictness: m1,
+     Unfolding: (GHC.Types.TrNameS MinHS.Evaluator.$tc'FreeClosure2) -}
+3d54221a66ca6304c4180b31912263cc
+  $tc'FreeClosure2 :: GHC.Prim.Addr#
+  {- HasNoCafRefs, Unfolding: ("'FreeClosure"#) -}
 586998028f16c14a7e2f558f72a2c898
   $tc'I :: GHC.Types.TyCon
   {- HasNoCafRefs, Strictness: m,
@@ -283,26 +300,26 @@ e08fd630ea97a5858f50e74eaabf6061
 838e8351c06f24ae2cadaf781dd5b37e
   $tc'Nil3 :: GHC.Prim.Addr#
   {- HasNoCafRefs, Unfolding: ("'Nil"#) -}
-445ffd1b775e6780c91f466b1fd7e8f3
-  $tc'Partial :: GHC.Types.TyCon
+ef4e6748fe3a8dd9f172b799550656f1
+  $tc'PartPrimOp :: GHC.Types.TyCon
   {- HasNoCafRefs, Strictness: m,
      Unfolding: (GHC.Types.TyCon
-                   9292759658673001463##
-                   17346511750425726405##
+                   14601235702296708252##
+                   5615548786255507636##
                    MinHS.Evaluator.$trModule
-                   MinHS.Evaluator.$tc'Partial2
+                   MinHS.Evaluator.$tc'PartPrimOp2
                    0#
-                   MinHS.Evaluator.$tc'Partial1) -}
-2ba062a9ccf2e18fddd000a2fee1da32
-  $tc'Partial1 :: GHC.Types.KindRep
+                   MinHS.Evaluator.$tc'PartPrimOp1) -}
+390bce6bebbf2d4ee8b14c1346d61809
+  $tc'PartPrimOp1 :: GHC.Types.KindRep
   {- HasNoCafRefs, Strictness: m4, Inline: [~] -}
-1434a3b2ae233f8f23154fe6b3763710
-  $tc'Partial2 :: GHC.Types.TrName
+51738abb5278ccf15e486c1064da6cfb
+  $tc'PartPrimOp2 :: GHC.Types.TrName
   {- HasNoCafRefs, Strictness: m1,
-     Unfolding: (GHC.Types.TrNameS MinHS.Evaluator.$tc'Partial3) -}
-beba3063d22ac08b5ec7d50119ae115a
-  $tc'Partial3 :: GHC.Prim.Addr#
-  {- HasNoCafRefs, Unfolding: ("'Partial"#) -}
+     Unfolding: (GHC.Types.TrNameS MinHS.Evaluator.$tc'PartPrimOp3) -}
+91ad44b35a7e45a47b8f913eb36a3c45
+  $tc'PartPrimOp3 :: GHC.Prim.Addr#
+  {- HasNoCafRefs, Unfolding: ("'PartPrimOp"#) -}
 5f8b870bebfcabb8bde7c6eb937a836d
   $tcValue :: GHC.Types.TyCon
   {- HasNoCafRefs, Strictness: m,
@@ -340,17 +357,18 @@ d1d94e31842d572bf95ce94d323a1176
 3c69d1cf3fd51fd0ca49b003485649d4
   $trModule4 :: GHC.Prim.Addr#
   {- HasNoCafRefs, Unfolding: ("main"#) -}
-4f6363ee2bfaf829cce439ce89b1ad5c
+da30df3db90d9e22820aa7b84d61db9c
   type VEnv = MinHS.Env.Env MinHS.Evaluator.Value
-4f6363ee2bfaf829cce439ce89b1ad5c
+da30df3db90d9e22820aa7b84d61db9c
   data Value
     = I GHC.Integer.Type.Integer
     | B GHC.Types.Bool
     | Nil
     | Cons GHC.Integer.Type.Integer MinHS.Evaluator.Value
     | Closure MinHS.Evaluator.VEnv MinHS.Syntax.Exp
-    | Partial MinHS.Syntax.Exp
-1fed3488e49c81ef8723ce953dc3e4fd
+    | PartPrimOp MinHS.Syntax.Exp
+    | FreeClosure MinHS.Evaluator.VEnv MinHS.Syntax.Exp
+3053b3683d9598b2965d5ce28f1fa9b9
   eqV ::
     MinHS.Evaluator.Value
     -> MinHS.Evaluator.Value -> MinHS.Evaluator.Value
@@ -372,15 +390,15 @@ d1d94e31842d572bf95ce94d323a1176
                              MinHS.Evaluator.eqV1
                         MinHS.Evaluator.I n2
                         -> MinHS.Evaluator.B (GHC.Integer.Type.eqInteger n1 n2) } }) -}
-0bcc86c1f84cbd698fe28c6255b6347e
+32d2217d939df7e8d40858fde7da3dcd
   eqV1 :: GHC.Prim.Addr#
   {- HasNoCafRefs,
-     Unfolding: ("MinHS\\Evaluator.hs:143:1-35|function eqV"#) -}
-05aa59e42c6c534a89fb6072f268f033
+     Unfolding: ("MinHS\\Evaluator.hs:148:1-35|function eqV"#) -}
+ff6c2547d3cfde3ebce504f3c6a4cd85
   evalE ::
     MinHS.Evaluator.VEnv -> MinHS.Syntax.Exp -> MinHS.Evaluator.Value
   {- Arity: 2, Strictness: <L,U><S,1*U> -}
-7b96499c98a82fcfe6226aea786ad264
+24c4a30c3f1665fbfab05f68d6ff4dd8
   evaluate :: MinHS.Syntax.Program -> MinHS.Evaluator.Value
   {- Arity: 1, Strictness: <S,1*U>,
      Unfolding: (\ (ds :: [MinHS.Syntax.Bind]) ->
@@ -409,7 +427,7 @@ ed01d2a169b972c5d90b29ff62560231
   evaluate2 :: [GHC.Types.Char]
   {- Unfolding: (GHC.CString.unpackCString#
                    MinHS.Evaluator.$trModule4) -}
-7239d03c4cca9abed71910963eb9622d
+75251ad6910ddf50ea717099ee27985f
   evaluate3 :: MinHS.Evaluator.Value
   {- Unfolding: (MinHS.Evaluator.evalE
                    (Data.Map.Internal.Tip @ GHC.Base.String @ MinHS.Evaluator.Value)
@@ -422,7 +440,7 @@ ed01d2a169b972c5d90b29ff62560231
      Unfolding: (MinHS.Syntax.Let
                    (GHC.Types.[] @ MinHS.Syntax.Bind)
                    MinHS.Evaluator.evaluate1) -}
-01654af7786967366069eb41d32ff0a6
+e5e2d52009b00bd809a4674947d7ea2c
   geV ::
     MinHS.Evaluator.Value
     -> MinHS.Evaluator.Value -> MinHS.Evaluator.Value
@@ -444,11 +462,11 @@ ed01d2a169b972c5d90b29ff62560231
                              MinHS.Evaluator.geV1
                         MinHS.Evaluator.I n2
                         -> MinHS.Evaluator.B (GHC.Integer.Type.geInteger n1 n2) } }) -}
-32cfed986ac0e281b75855559925789d
+41584f37b2c4f8d095eb62ea5ae718b5
   geV1 :: GHC.Prim.Addr#
   {- HasNoCafRefs,
-     Unfolding: ("MinHS\\Evaluator.hs:134:1-35|function geV"#) -}
-ad58bfb9af5afc7727ea67387ce45eed
+     Unfolding: ("MinHS\\Evaluator.hs:139:1-35|function geV"#) -}
+cbefc0947ccb7dcda3db28edcdaf91ab
   gtV ::
     MinHS.Evaluator.Value
     -> MinHS.Evaluator.Value -> MinHS.Evaluator.Value
@@ -470,11 +488,11 @@ ad58bfb9af5afc7727ea67387ce45eed
                              MinHS.Evaluator.gtV1
                         MinHS.Evaluator.I n2
                         -> MinHS.Evaluator.B (GHC.Integer.Type.gtInteger n1 n2) } }) -}
-26e0e1cd23a60fbef4f2a8de0c51c739
+5110467564bde5f092202c8b7ea9c306
   gtV1 :: GHC.Prim.Addr#
   {- HasNoCafRefs,
-     Unfolding: ("MinHS\\Evaluator.hs:131:1-34|function gtV"#) -}
-2f82b6bacdf9a33a7960f8b9812e194a
+     Unfolding: ("MinHS\\Evaluator.hs:136:1-34|function gtV"#) -}
+c2ff2c7c75120a1c31bc32c33a31e8a1
   headV :: MinHS.Evaluator.Value -> MinHS.Evaluator.Value
   {- Arity: 1, Strictness: <S,1*U>m1,
      Unfolding: InlineRule (1, True, False)
@@ -483,13 +501,13 @@ ad58bfb9af5afc7727ea67387ce45eed
                    DEFAULT -> MinHS.Evaluator.headV2
                    MinHS.Evaluator.Nil -> MinHS.Evaluator.headV1
                    MinHS.Evaluator.Cons n value -> MinHS.Evaluator.I n }) -}
-fb03f019ac592a6af5c4e9afe0d1f9d9
+8316a5adfa2331fd73e41f49a7b6e50b
   headV1 :: MinHS.Evaluator.Value
   {- Strictness: x -}
-6e43dc0ec058a3cdb0135f0b396d53d1
+1dfb6999e23758895507bd501745f858
   headV2 :: MinHS.Evaluator.Value
   {- Strictness: x -}
-cd9e8474b75dc6adfef6503833f28c7b
+9950164ad341135dd139c3f3abcf7f4a
   ifV ::
     MinHS.Evaluator.VEnv
     -> MinHS.Evaluator.Value
@@ -508,10 +526,10 @@ cd9e8474b75dc6adfef6503833f28c7b
                    -> case ds1 of wild1 {
                         GHC.Types.False -> MinHS.Evaluator.evalE gamma expr2
                         GHC.Types.True -> MinHS.Evaluator.evalE gamma expr1 } }) -}
-2f498f9292860d5f027c739e9e4aa661
+82b2f1a5ce3c07009e4678ac6bbeee26
   ifV1 :: MinHS.Evaluator.Value
   {- Strictness: x -}
-bd6e4300d5857f58785d1264918416f7
+6c7c7f26c868f772e55792a0b6b459c4
   leV ::
     MinHS.Evaluator.Value
     -> MinHS.Evaluator.Value -> MinHS.Evaluator.Value
@@ -533,11 +551,11 @@ bd6e4300d5857f58785d1264918416f7
                              MinHS.Evaluator.leV1
                         MinHS.Evaluator.I n2
                         -> MinHS.Evaluator.B (GHC.Integer.Type.leInteger n1 n2) } }) -}
-65b0e3219f6dbed3df4b45e1caaf791a
+b5aa08cac50bc3046d6d9d0992916fae
   leV1 :: GHC.Prim.Addr#
   {- HasNoCafRefs,
-     Unfolding: ("MinHS\\Evaluator.hs:140:1-35|function leV"#) -}
-a387652909c01842061c51d2c1e8cc82
+     Unfolding: ("MinHS\\Evaluator.hs:145:1-35|function leV"#) -}
+eafcff0c59bf0fec4703c19dd78f6332
   ltV ::
     MinHS.Evaluator.Value
     -> MinHS.Evaluator.Value -> MinHS.Evaluator.Value
@@ -559,11 +577,11 @@ a387652909c01842061c51d2c1e8cc82
                              MinHS.Evaluator.ltV1
                         MinHS.Evaluator.I n2
                         -> MinHS.Evaluator.B (GHC.Integer.Type.ltInteger n1 n2) } }) -}
-4349f2eb2d6ea2048ef127f0ba130079
+02266b30dd18357f092d527d1340e8ef
   ltV1 :: GHC.Prim.Addr#
   {- HasNoCafRefs,
-     Unfolding: ("MinHS\\Evaluator.hs:137:1-34|function ltV"#) -}
-ce38e9025848457d73c7f7644764806b
+     Unfolding: ("MinHS\\Evaluator.hs:142:1-34|function ltV"#) -}
+22c43665526af56ba87729712dc76aff
   mulV ::
     MinHS.Evaluator.Value
     -> MinHS.Evaluator.Value -> MinHS.Evaluator.Value
@@ -585,11 +603,11 @@ ce38e9025848457d73c7f7644764806b
                              MinHS.Evaluator.mulV1
                         MinHS.Evaluator.I n2
                         -> MinHS.Evaluator.I (GHC.Integer.Type.timesInteger n1 n2) } }) -}
-5aea7287f5ea057ec02b18f2448b72b7
+9f61aacb435fee23a0d325b3bce3ba9e
   mulV1 :: GHC.Prim.Addr#
   {- HasNoCafRefs,
-     Unfolding: ("MinHS\\Evaluator.hs:120:1-34|function mulV"#) -}
-cd044902a43466b7ada29d631cd6b519
+     Unfolding: ("MinHS\\Evaluator.hs:125:1-34|function mulV"#) -}
+526d9b75434369fdde74a7908fdd262d
   neV ::
     MinHS.Evaluator.Value
     -> MinHS.Evaluator.Value -> MinHS.Evaluator.Value
@@ -611,11 +629,11 @@ cd044902a43466b7ada29d631cd6b519
                              MinHS.Evaluator.neV1
                         MinHS.Evaluator.I n2
                         -> MinHS.Evaluator.B (GHC.Integer.Type.neqInteger n1 n2) } }) -}
-f65f15399339a56a3ac28f5ccc5efd06
+f7b3bc3398a387a83f6039bcc5c9e9a1
   neV1 :: GHC.Prim.Addr#
   {- HasNoCafRefs,
-     Unfolding: ("MinHS\\Evaluator.hs:146:1-35|function neV"#) -}
-2fe75d550a06ad0af4a350c73cd59c76
+     Unfolding: ("MinHS\\Evaluator.hs:151:1-35|function neV"#) -}
+f61b3134a9850349f1a57088839b5af5
   nullV :: MinHS.Evaluator.Value -> MinHS.Evaluator.Value
   {- Arity: 1, Strictness: <S,1*U>m2,
      Unfolding: InlineRule (1, True, False)
@@ -624,18 +642,18 @@ f65f15399339a56a3ac28f5ccc5efd06
                    DEFAULT -> MinHS.Evaluator.nullV3
                    MinHS.Evaluator.Nil -> MinHS.Evaluator.nullV2
                    MinHS.Evaluator.Cons n value -> MinHS.Evaluator.nullV1 }) -}
-a524119e0dbe0002a1299c3ddbe4f08f
+721ffb672c7b75c9a2941034f24ae7b2
   nullV1 :: MinHS.Evaluator.Value
   {- HasNoCafRefs, Strictness: m2,
      Unfolding: (MinHS.Evaluator.B GHC.Types.False) -}
-a8a24f5445a8decda7b3042623200169
+28731cd1fded75e4534841135a2ed5fa
   nullV2 :: MinHS.Evaluator.Value
   {- HasNoCafRefs, Strictness: m2,
      Unfolding: (MinHS.Evaluator.B GHC.Types.True) -}
-14fac768d0a7d570dbb50ee46e7fe019
+f558468fac4022f2ff1ee96bf29ca2a4
   nullV3 :: MinHS.Evaluator.Value
   {- Strictness: x -}
-bb27880a4fa777a4924ac448e8690255
+ea6dae2e12b6bc2bcd21660a39ea47e6
   quotV ::
     MinHS.Evaluator.Value
     -> MinHS.Evaluator.Value -> MinHS.Evaluator.Value
@@ -654,16 +672,16 @@ bb27880a4fa777a4924ac448e8690255
                              DEFAULT
                              -> MinHS.Evaluator.I (GHC.Real.$fIntegralInteger_$cquot n1 ds)
                              1# -> MinHS.Evaluator.quotV1 } } }) -}
-4e8c45a8af8e3db4b1d0380c4865c0f1
+870786cb34b8ea826349a07729907ca5
   quotV1 :: MinHS.Evaluator.Value
   {- Strictness: x -}
 737ab5585cec4cbda1bf0fd9f17aca06
   quotV2 :: GHC.Integer.Type.Integer
   {- HasNoCafRefs, Unfolding: (0) -}
-b87f5a76fc71b9b309ad20bf84cafae6
+4c2007de7766fea1f6a878bdbc3b0ff2
   quotV3 :: MinHS.Evaluator.Value
   {- Strictness: x -}
-93dc4ba3c63546fe40d5444c89994f64
+4e0b1781a395931957e75925bc21febc
   remV ::
     MinHS.Evaluator.Value
     -> MinHS.Evaluator.Value -> MinHS.Evaluator.Value
@@ -682,13 +700,13 @@ b87f5a76fc71b9b309ad20bf84cafae6
                              DEFAULT
                              -> MinHS.Evaluator.I (GHC.Real.$fIntegralInteger_$crem n1 ds)
                              1# -> MinHS.Evaluator.remV1 } } }) -}
-db891a73115818e951fbf11323e2a77a
+06fb55caa3b8c8f0d03570672299cbe9
   remV1 :: MinHS.Evaluator.Value
   {- Strictness: x -}
-bc81f355c72b2ccb1cf092e3ad9df61d
+e4fc14233b28601885b0026bbac4ace5
   remV2 :: MinHS.Evaluator.Value
   {- Strictness: x -}
-a76382c481496ecd47685ecc7f8b30f4
+108bc1a7d4d8ae2af90108bd39399d7a
   subV ::
     MinHS.Evaluator.Value
     -> MinHS.Evaluator.Value -> MinHS.Evaluator.Value
@@ -710,11 +728,11 @@ a76382c481496ecd47685ecc7f8b30f4
                              MinHS.Evaluator.subV1
                         MinHS.Evaluator.I n2
                         -> MinHS.Evaluator.I (GHC.Integer.Type.minusInteger n1 n2) } }) -}
-b23b461cd04a9b0cbd45a78ee99bea81
+7d2e1e894a0c140eb53f74616536dfd1
   subV1 :: GHC.Prim.Addr#
   {- HasNoCafRefs,
-     Unfolding: ("MinHS\\Evaluator.hs:117:1-34|function subV"#) -}
-9c5ddec823a1e65a87f7788e901b25bc
+     Unfolding: ("MinHS\\Evaluator.hs:122:1-34|function subV"#) -}
+822270860c40c33a8bfb2f62df0614d1
   sumV ::
     MinHS.Evaluator.Value
     -> MinHS.Evaluator.Value -> MinHS.Evaluator.Value
@@ -736,11 +754,11 @@ b23b461cd04a9b0cbd45a78ee99bea81
                              MinHS.Evaluator.sumV1
                         MinHS.Evaluator.I n2
                         -> MinHS.Evaluator.I (GHC.Integer.Type.plusInteger n1 n2) } }) -}
-dea2311fce8a34c22ac8bfbdff5503bc
+7e3ad4900ee0d2de1dadcd2e3fcfa095
   sumV1 :: GHC.Prim.Addr#
   {- HasNoCafRefs,
-     Unfolding: ("MinHS\\Evaluator.hs:114:1-34|function sumV"#) -}
-4022ee93bee7a334f288c871ad6886df
+     Unfolding: ("MinHS\\Evaluator.hs:119:1-34|function sumV"#) -}
+9e52b3d447e070757a29bf27a58b0e41
   tailV :: MinHS.Evaluator.Value -> MinHS.Evaluator.Value
   {- Arity: 1, Strictness: <S,1*U>,
      Unfolding: InlineRule (1, True, False)
@@ -749,10 +767,10 @@ dea2311fce8a34c22ac8bfbdff5503bc
                    DEFAULT -> MinHS.Evaluator.tailV2
                    MinHS.Evaluator.Nil -> MinHS.Evaluator.tailV1
                    MinHS.Evaluator.Cons n value -> value }) -}
-d111c2123afefb616c841c8f22b3c846
+5eb428f84ac48ec17baebd00ca39a946
   tailV1 :: MinHS.Evaluator.Value
   {- Strictness: x -}
-e536783dbc0f4cb20efebb232e4158d2
+1364f35063baf5fa67514786d8e8bd7b
   tailV2 :: MinHS.Evaluator.Value
   {- Strictness: x -}
 instance Text.PrettyPrint.ANSI.Leijen.Internal.Pretty [MinHS.Evaluator.Value]
