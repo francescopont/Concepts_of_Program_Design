@@ -7,11 +7,11 @@ import qualified Text.PrettyPrint.ANSI.Leijen as PP
 type VEnv = E.Env Value
 
 data Value = I Integer
-           | B Bool
-           | Nil
-           | Cons Integer Value
-           | Closure VEnv Exp   -- added the the exp represents the closure
-            
+          | B Bool
+          | Nil
+          | Cons Integer Value
+          | Closure VEnv Exp   -- added the the exp represents the closure ( the closure contains )
+          | Partial Exp  -- added to represent partial evaluation ( task 2)
            -- Add other variants as needed
            deriving (Show)
 
@@ -46,7 +46,7 @@ evalE gamma (App (App ( Prim Add) (expr1)) (expr2)) = sumV (evalE gamma expr1) (
 evalE gamma (App (App ( Prim Sub) (expr1)) (expr2)) = subV (evalE gamma expr1) (evalE gamma expr2) -- sub  
 evalE gamma (App (App ( Prim Mul) (expr1)) (expr2)) = mulV (evalE gamma expr1) (evalE gamma expr2)-- mul
 evalE gamma (App (App ( Prim Quot) (expr1)) (expr2)) = quotV (evalE gamma expr1) (evalE gamma expr2) -- quot 
-evalE gamma (App (App ( Prim Rem) (expr1)) (expr2)) = remV (evalE gamma expr1) (evalE gamma expr2) -- quot  --ne
+evalE gamma (App (App ( Prim Rem) (expr1)) (expr2)) = remV (evalE gamma expr1) (evalE gamma expr2) -- rem
 evalE gamma (App ( Prim Neg) (expr1)) = mulV (evalE gamma expr1) (I (-1)) -- neg
 evalE gamma (App (App ( Prim Gt) (expr1)) (expr2)) = gtV (evalE gamma expr1) (evalE gamma expr2) --gt
 evalE gamma (App (App ( Prim Ge) (expr1)) (expr2)) = geV (evalE gamma expr1) (evalE gamma expr2)   --ge
@@ -67,24 +67,49 @@ evalE gamma (Var varId) = case E.lookup gamma varId of
                           Just (Nil) -> (Nil)
                           Just (Cons n val) -> (Cons n val)
                           Just (Closure gamma expr) -> (Closure gamma expr)
+                          Just (Partial expr) -> (Partial expr)
                           Nothing  -> error "Should I implement this?"
 -- variable binding with let
 evalE gamma (Let [Bind varId ty [] varExpr] expr) =  evalE (E.add gamma (varId ,( evalE gamma varExpr))) expr
+--task2 
+evalE gamma (App (Prim Add) expr) = Partial  (App (Prim Add) expr)--add
+evalE gamma (App (Prim Sub) expr) = Partial  (App (Prim Sub) expr) --sub
+evalE gamma (App (Prim Mul) expr) = Partial  (App (Prim Mul) expr) --mul
+evalE gamma (App (Prim Quot) expr) = Partial  (App (Prim Quot) expr) --quot
+evalE gamma (App (Prim Rem) expr) = Partial  (App (Prim Rem) expr)  --rem
+evalE gamma (Prim Neg)  = Partial  (Prim Neg)  --neg
+evalE gamma (App (Prim Gt) expr) = Partial  (App (Prim Gt) expr) --gt
+evalE gamma (App (Prim Ge) expr) = Partial  (App (Prim Ge) expr) --ge
+evalE gamma (App (Prim Lt) expr) = Partial  (App (Prim Lt) expr) --lt
+evalE gamma (App (Prim Le) expr) = Partial  (App (Prim Le) expr) --le
+evalE gamma (App (Prim Eq) expr) = Partial  (App (Prim Eq) expr) --eq
+evalE gamma (App (Prim Ne) expr) = Partial  (App (Prim Ne) expr) --ne
+evalE gamma (Prim Head)  = Partial  (Prim Head)  --head
+evalE gamma (Prim Tail)  = Partial  (Prim Tail)  --tail
+evalE gamma (Prim Null)  = Partial  (Prim Null)  --null
+evalE gamma (App (Con "Cons") (expr1)) = Partial (App (Con "Cons") (expr1)) --cons
+
+
+
 --recursive
 evalE gamma (Recfun (Bind funId typ [] funExpr )) = evalE (E.add gamma (funId, (evalE gamma funExpr))) funExpr
---evalE gamma (Recfun (Bind (funId) typ [] funExpr )) = Closure gamma (Recfun (Bind (funId) typ [] funExpr )) 
+--evalE gamma (Recfun (Bind (funId) typ [] funExpr )) = Closure gamma (Recfun (Bind (funId) typ [] funExpr )) is this useful??
 
 -- how to introduce the closures 
-evalE gamma (Recfun (Bind (funId) typ [funVar] funExpr )) = Closure gamma (Recfun (Bind (funId) typ [funVar] funExpr )) 
+evalE gamma (Recfun (Bind (funId) typ varList funExpr )) = Closure gamma (Recfun (Bind (funId) typ varList funExpr )) 
 --function application
 evalE gamma (App (expr1) (expr2)) = case evalE gamma expr1 of
-                                      Closure gamma1 (Recfun(Bind (funId) typ [funVar] funExpr )) -> evalE (E.addAll gamma1 [(funVar, (evalE gamma expr2)), (funId, (Closure gamma1 (Recfun(Bind (funId) typ [funVar] funExpr )))) ]) funExpr
+                                      Partial partExpr -> evalE gamma (App partExpr expr2)
+                                      Closure gamma1 (Recfun(Bind (funId) typ [ funVar , funVar2] funExpr )) -> evalE (E.addAll gamma1 [(funVar, (evalE gamma expr2)), (funId, (Closure gamma1 (Recfun(Bind (funId) typ [ funVar , funVar2] funExpr )))) ]) (Recfun (Bind (funId) typ [funVar2] funExpr )) 
+                                      Closure gamma1 (Recfun(Bind (funId) typ [funVar] funExpr )) ->   evalE (E.addAll gamma1 [(funVar, (evalE gamma expr2)), (funId, (Closure gamma1 (Recfun(Bind (funId) typ [funVar] funExpr )))) ])          funExpr
                                       _ -> error "Ciao"
+
+
 
 evalE gamma expr = error "implement me!"
 
---FUNCTIONS BETWEEN 
 
+--functions
 sumV :: Value -> Value -> Value
 sumV (I n1) (I n2) = (I (n1 + n2))
 
