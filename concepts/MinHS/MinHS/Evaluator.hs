@@ -138,17 +138,11 @@ ifV gamma (B False) expr1 expr2 = evalE gamma expr2
 
 
 -- MISSING PARTS
---recfun
 -- currying
 --recursion
 -- functions with multiple arguments (?)
 -- read better the specs (particularly the big step semantics)
 -- implement the rem with haskell rem function
-
-
-
---[Bind "main" (TypeApp (TypeCon List) (TypeCon Int)) [] (Let [Bind "ones" (TypeApp (TypeCon List) (TypeCon Int)) [] (Recfun (Bind "ones" (TypeApp (TypeCon List) (TypeCon Int)) [] (App (App (Con "Cons") (Num 1)) (Var "ones"))))] 
- -- (App () (App (App () (App () ()) (Con "Nil"))))]
 
 
 
