@@ -39,7 +39,7 @@ data Op = Add
         deriving (Show, Eq, Read)
 
 data Type = Arrow Type Type
-          | TypeApp Type Type -- is it ever used?
+          | TypeApp Type Type -- task 5 ?
           | TypeCon TyCon
           deriving (Read, Show, Eq, Ord)
 

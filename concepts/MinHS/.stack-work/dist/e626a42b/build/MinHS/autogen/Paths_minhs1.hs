@@ -29,12 +29,12 @@ version :: Version
 version = Version [0,1,0,0] []
 bindir, libdir, dynlibdir, datadir, libexecdir, sysconfdir :: FilePath
 
-bindir     = "C:\\Users\\ponti\\Documenti\\Github\\Haskell\\concepts\\MinHS\\.stack-work\\install\\0413ab39\\bin"
-libdir     = "C:\\Users\\ponti\\Documenti\\Github\\Haskell\\concepts\\MinHS\\.stack-work\\install\\0413ab39\\lib\\x86_64-windows-ghc-8.6.5\\minhs1-0.1.0.0-JQuAxFciP40B0V7D2RKVVF-MinHS"
-dynlibdir  = "C:\\Users\\ponti\\Documenti\\Github\\Haskell\\concepts\\MinHS\\.stack-work\\install\\0413ab39\\lib\\x86_64-windows-ghc-8.6.5"
-datadir    = "C:\\Users\\ponti\\Documenti\\Github\\Haskell\\concepts\\MinHS\\.stack-work\\install\\0413ab39\\share\\x86_64-windows-ghc-8.6.5\\minhs1-0.1.0.0"
-libexecdir = "C:\\Users\\ponti\\Documenti\\Github\\Haskell\\concepts\\MinHS\\.stack-work\\install\\0413ab39\\libexec\\x86_64-windows-ghc-8.6.5\\minhs1-0.1.0.0"
-sysconfdir = "C:\\Users\\ponti\\Documenti\\Github\\Haskell\\concepts\\MinHS\\.stack-work\\install\\0413ab39\\etc"
+bindir     = "C:\\Users\\ponti\\Documenti\\github\\Haskell\\concepts\\MinHS\\.stack-work\\install\\61863205\\bin"
+libdir     = "C:\\Users\\ponti\\Documenti\\github\\Haskell\\concepts\\MinHS\\.stack-work\\install\\61863205\\lib\\x86_64-windows-ghc-8.6.5\\minhs1-0.1.0.0-L3tPh3RfeUF73GB0dYm6H2-MinHS"
+dynlibdir  = "C:\\Users\\ponti\\Documenti\\github\\Haskell\\concepts\\MinHS\\.stack-work\\install\\61863205\\lib\\x86_64-windows-ghc-8.6.5"
+datadir    = "C:\\Users\\ponti\\Documenti\\github\\Haskell\\concepts\\MinHS\\.stack-work\\install\\61863205\\share\\x86_64-windows-ghc-8.6.5\\minhs1-0.1.0.0"
+libexecdir = "C:\\Users\\ponti\\Documenti\\github\\Haskell\\concepts\\MinHS\\.stack-work\\install\\61863205\\libexec\\x86_64-windows-ghc-8.6.5\\minhs1-0.1.0.0"
+sysconfdir = "C:\\Users\\ponti\\Documenti\\github\\Haskell\\concepts\\MinHS\\.stack-work\\install\\61863205\\etc"
 
 getBinDir, getLibDir, getDynLibDir, getDataDir, getLibexecDir, getSysconfDir :: IO FilePath
 getBinDir = catchIO (getEnv "minhs1_bindir") (\_ -> return bindir)

@@ -10,9 +10,13 @@ data Value = I Integer
           | B Bool
           | Nil
           | Cons Integer Value
-          | Closure VEnv Exp   -- added the the exp represents the closure ( the closure contains )
+          | FunClosure VEnv Exp   -- added the the exp represents the FunClosure ( the FunClosure contains )
           | PartPrimOp Exp  -- added to represent PartPrimOp evaluation ( task 2)
-          | FreeClosure VEnv Exp -- added to represent partially evaluated functions ( task 3)
+          | PartFunClosure VEnv Exp  -- for task 3
+          | LetClosure VEnv Bind  -- for task 5
+          | PartLetClosure VEnv Bind -- for task 5
+
+          -- added to represent partially evaluated functions ( task 3)
            -- Add other variants as needed
            deriving (Show)
 
@@ -67,13 +71,17 @@ evalE gamma (Var varId) = case E.lookup gamma varId of
                           Just (B bool) -> (B bool)
                           Just (Nil) -> (Nil)
                           Just (Cons n val) -> (Cons n val)
-                          Just (Closure gamma expr) -> (Closure gamma expr)
+                          Just (FunClosure gamma expr) -> (FunClosure gamma expr)
                           Just (PartPrimOp expr) -> (PartPrimOp expr)
-                          Just (FreeClosure gamma expr) -> (FreeClosure gamma expr)
+                          Just (PartFunClosure gamma expr) -> (PartFunClosure gamma expr)
+                          Just (LetClosure gamma expr) -> (LetClosure gamma expr)
+                          Just (PartLetClosure gamma expr) -> (PartLetClosure gamma expr)
                           Nothing  -> error "Should I implement this?"
--- variable binding with let
-evalE gamma (Let [(Bind varId ty [] varExpr), bind2] expr) =  evalE (E.add gamma (varId ,( evalE gamma varExpr))) (Let [bind2] expr) --(task2)
+-- variable bindings with let
+evalE gamma (Let [(Bind varId ty [] varExpr), bind2] expr) =  evalE (E.add gamma (varId ,( evalE gamma varExpr))) (Let [bind2] expr) --(task 4: multiple bindings in let)
 evalE gamma (Let [Bind varId ty [] varExpr] expr) =  evalE (E.add gamma (varId ,( evalE gamma varExpr)))  expr
+
+evalE gamma (Let [(Bind varId ty varList varExpr)] expr) =  evalE (E.add gamma (varId ,( LetClosure gamma (Bind varId ty varList varExpr))))  expr --task 5 
 --task2 
 evalE gamma (App (Prim Add) expr) = PartPrimOp  (App (Prim Add) expr)--add
 evalE gamma (App (Prim Sub) expr) = PartPrimOp  (App (Prim Sub) expr) --sub
@@ -95,24 +103,25 @@ evalE gamma (App (Con "Cons") (expr1)) = PartPrimOp (App (Con "Cons") (expr1)) -
 
 
 --recursive
-evalE gamma (Recfun (Bind funId typ [] funExpr )) = evalE (E.add gamma (funId, (evalE gamma funExpr))) funExpr
---evalE gamma (Recfun (Bind (funId) typ [] funExpr )) = Closure gamma (Recfun (Bind (funId) typ [] funExpr )) is this useful??
+evalE gamma (Recfun (Bind funId typ [] funExpr )) = evalE (E.add gamma (funId, (evalE gamma funExpr))) funExpr -- to introduce the infinite list in the big step semantics 
+evalE gamma (Recfun (Bind (funId) typ varList funExpr )) = FunClosure gamma (Recfun (Bind (funId) typ varList funExpr )) -- to introduce funClosures
 
--- how to introduce the closures 
-evalE gamma (Recfun (Bind (funId) typ varList funExpr )) = Closure gamma (Recfun (Bind (funId) typ varList funExpr )) 
---function application
+--function application, partial application, etc
 evalE gamma (App (expr1) (expr2)) = case evalE gamma expr1 of
                                       PartPrimOp partExpr -> evalE gamma (App partExpr expr2)
-                                      Closure gamma1 (Recfun(Bind (funId) typ [ funVar , funVar2] funExpr )) -> FreeClosure (E.addAll gamma1 [(funVar, (evalE gamma expr2)), (funId, (Closure gamma1 (Recfun(Bind (funId) typ [ funVar , funVar2] funExpr )))) ]) (Recfun (Bind (funId) typ [funVar2] funExpr )) 
-                                      Closure gamma1 (Recfun(Bind (funId) typ [funVar] funExpr )) ->   evalE (E.addAll gamma1 [(funVar, (evalE gamma expr2)), (funId, (Closure gamma1 (Recfun(Bind (funId) typ [funVar] funExpr )))) ])          funExpr
-                                      FreeClosure gamma1 (Recfun(Bind (funId) typ [ funVar , funVar2] funExpr )) -> FreeClosure (E.add gamma1 (funVar, (evalE gamma expr2))) (Recfun (Bind (funId) typ [funVar2] funExpr )) 
-                                      FreeClosure gamma1 (Recfun(Bind (funId) typ [funVar] funExpr )) ->   evalE (E.add gamma1 (funVar, (evalE gamma expr2)))          funExpr
+                                      FunClosure gamma1 (Recfun(Bind (funId) typ [ funVar , funVar2] funExpr )) -> PartFunClosure (E.addAll gamma1 [(funVar, (evalE gamma expr2)), (funId, (FunClosure gamma1 (Recfun(Bind (funId) typ [ funVar , funVar2] funExpr )))) ]) (Recfun (Bind (funId) typ [funVar2] funExpr )) 
+                                      FunClosure gamma1 (Recfun(Bind (funId) typ [funVar] funExpr )) ->   evalE (E.addAll gamma1 [(funVar, (evalE gamma expr2)), (funId, (FunClosure gamma1 (Recfun(Bind (funId) typ [funVar] funExpr )))) ])          funExpr
+                                      PartFunClosure gamma1 (Recfun(Bind (funId) typ [ funVar , funVar2] funExpr )) -> PartFunClosure (E.add gamma1 (funVar, (evalE gamma expr2))) (Recfun (Bind (funId) typ [funVar2] funExpr )) -- task 4
+                                      PartFunClosure gamma1 (Recfun(Bind (funId) typ [funVar] funExpr )) ->   evalE (E.add gamma1 (funVar, (evalE gamma expr2)))          funExpr  -- task 3 
+                                      LetClosure gamma1 (Bind funId typ [ funVar , funVar2] funExpr ) -> PartLetClosure (E.add gamma1 (funVar, (evalE gamma expr2))) (Bind (funId) typ [funVar2] funExpr ) --task 5
+                                      LetClosure gamma1 (Bind (funId) typ [funVar] funExpr ) ->   evalE (E.add gamma1 (funVar, (evalE gamma expr2)))   funExpr -- task 5
+                                      PartLetClosure gamma1 (Bind (funId) typ [ funVar , funVar2] funExpr ) -> PartLetClosure (E.add gamma1 (funVar, (evalE gamma expr2)))  (Bind (funId) typ [funVar2] funExpr ) -- task 5
+                                      PartLetClosure gamma1 (Bind (funId) typ [funVar] funExpr ) ->   evalE (E.add gamma1 (funVar, (evalE gamma expr2)))    funExpr  --task 5
                                       _ -> error "Ciao"
 
 
 
 evalE gamma expr = error "implement me!"
-
 
 --functions
 sumV :: Value -> Value -> Value
@@ -171,8 +180,6 @@ ifV gamma (B False) expr1 expr2 = evalE gamma expr2
 -- currying
 --recursion
 -- functions with multiple arguments (?)
--- read better the specs (particularly the big step semantics)
--- implement the rem with haskell rem function
 
 
 

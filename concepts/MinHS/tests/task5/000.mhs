@@ -1,0 +1,3 @@
+main :: Int
+= let y :: Int = y;
+in f y; -- returns 4
