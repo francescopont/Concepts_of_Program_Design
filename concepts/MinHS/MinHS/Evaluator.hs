@@ -79,7 +79,7 @@ evalE gamma (Var varId) = case E.lookup gamma varId of
                           Just (Err n) -> error "this variable should not be here"
                           Nothing  -> error "Variable not in this environment"
 -- variable bindings with let
-evalE gamma (Let    [(Bind varId ty [] varExpr)] expr)             =  evalE (E.add gamma (varId ,( evalE gamma varExpr)))  expr --(task 4)
+evalE gamma (Let    [(Bind varId ty [] varExpr)] expr)             =  evalE (E.add gamma (varId ,( evalE gamma varExpr)))  expr 
 evalE gamma (Let    ((Bind varId ty [] varExpr):binds) expr)       =  evalE (E.add gamma (varId ,( evalE gamma varExpr))) (Let binds expr) --(task 4: multiple bindings in let)
 evalE gamma (Let    [(Bind varId ty varList varExpr)] expr)         =  evalE (E.add gamma (varId ,( LetClosure gamma (Bind varId ty varList varExpr))))  expr -- 
 evalE gamma (Let    ((Bind varId ty varList varExpr): binds) expr)  =  evalE (E.add gamma (varId ,( LetClosure gamma (Bind varId ty varList varExpr)))) (Let binds expr) --(task 5:let bindings declare functions)
@@ -114,14 +114,12 @@ evalE gamma (Recfun (Bind (funId) typ varList funExpr )) = FunClosure gamma (Rec
 evalE gamma (App (expr1) (expr2)) = case evalE gamma expr1 of
                                       PartPrimOp partExpr -> evalE gamma (App partExpr expr2)
                                       FunClosure gamma1 (Recfun(Bind (funId) typ [funVar] funExpr ))               ->          evalE (E.addAll gamma1 [(funVar, (evalE gamma expr2)), (funId, (FunClosure gamma1 (Recfun(Bind (funId) typ [funVar] funExpr )))) ])          funExpr
-                                      FunClosure gamma1 (Recfun(Bind (funId) typ  (funVar :funVars) funExpr ))     -> PartFunClosure (E.addAll gamma1 [(funVar, (evalE gamma expr2)), (funId, (FunClosure gamma1 (Recfun(Bind (funId) typ  funVars funExpr )))) ]) (Recfun (Bind (funId) typ funVars funExpr )) 
+                                      FunClosure gamma1 (Recfun(Bind (funId) typ  (funVar :funVars) funExpr ))     -> PartFunClosure (E.addAll gamma1 [(funVar, (evalE gamma expr2)), (funId, (FunClosure gamma1 (Recfun(Bind (funId) typ  (funVar :funVars) funExpr )))) ])  (Recfun (Bind (funId) typ funVars funExpr )) 
                                       PartFunClosure gamma1 (Recfun(Bind (funId) typ [funVar] funExpr ))           ->          evalE (E.add gamma1 (funVar, (evalE gamma expr2)))   funExpr  -- task 3                                       
                                       PartFunClosure gamma1 (Recfun(Bind (funId) typ (funVar : funVars) funExpr )) -> PartFunClosure (E.add gamma1 (funVar, (evalE gamma expr2))) (Recfun (Bind (funId) typ funVars funExpr )) -- task 4
                                       LetClosure gamma1 (Bind (funId) typ [funVar] funExpr )                       ->          evalE (E.add gamma1 (funVar, (evalE gamma expr2)))   funExpr -- task 5
                                       LetClosure gamma1 (Bind funId typ (funVar:funVars) funExpr )                 ->     LetClosure (E.add gamma1 (funVar, (evalE gamma expr2))) (Bind (funId) typ funVars funExpr ) --task 5
-                                      
-                            
-                                      _ -> error "case error line 120"
+                                      _ -> error "unknows parameters of an application"
 
 
 
