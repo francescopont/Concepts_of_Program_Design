@@ -1,0 +1,6 @@
+main :: Int
+= letrec a :: Int = c;
+	b :: Int = a;
+	c :: Int = 7;
+in let f :: (Int -> Int) x = x + 1 +b;
+in (f a) + b; -- returns 
