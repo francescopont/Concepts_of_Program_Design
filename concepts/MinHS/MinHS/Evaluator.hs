@@ -32,7 +32,6 @@ evaluate [Bind _ _ _ e] = evalE E.empty e
 evaluate bs = evalE E.empty (Let bs (Var "main")) -- what's the purpose of this line? useless for now
 
 -- Implement the interpreter as specified by the operational semantics.
--- Con = constructor
 evalE :: VEnv -> Exp -> Value
 --numbers
 evalE gamma (Num n)= (I n)  
@@ -76,8 +75,8 @@ evalE gamma (Var varId) = case E.lookup gamma varId of
                           Just (PartFunClosure gamma1 expr) -> (PartFunClosure gamma1 expr)
                           Just (LetClosure gamma1 expr) -> (LetClosure gamma1 expr)
                           Just (LetRecClosure gamma1 (Bind varId ty []  varExpr)) -> evalE ( E.add (gamma) (varId, Err 0)) varExpr
-                          Just (Err n) -> error "this variable should not be here"
-                          Nothing  -> error "Variable not in this environment"
+                          Just (Err n) -> error "this variable should not be here: this is usually caused by not allowed recursion"
+                          Nothing  -> error "Variable not found in this environment"
 -- variable bindings with let
 evalE gamma (Let    [(Bind varId ty [] varExpr)] expr)             =  evalE (E.add gamma (varId ,( evalE gamma varExpr)))  expr 
 evalE gamma (Let    ((Bind varId ty [] varExpr):binds) expr)       =  evalE (E.add gamma (varId ,( evalE gamma varExpr))) (Let binds expr) --(task 4: multiple bindings in let)
@@ -123,7 +122,7 @@ evalE gamma (App (expr1) (expr2)) = case evalE gamma expr1 of
 
 
 
-evalE gamma expr = error "implement me! cio ao"
+evalE gamma expr = error "implement me, Mario!"
 
 --functions
 sumV :: Value -> Value -> Value
@@ -162,11 +161,11 @@ neV :: Value -> Value -> Value
 neV (I n1) (I n2) = (B ( n1 /= n2))
 
 headV :: Value -> Value
-headV Nil = error "List is empty!"
+headV Nil = error "List is empty! Cannot apply head operator"
 headV (Cons n value) = (I n)
 
 tailV :: Value -> Value
-tailV Nil = error "List is empty!"
+tailV Nil = error "List is empty! Cannot apply tail operator"
 tailV (Cons n value) = value
 
 nullV :: Value -> Value
