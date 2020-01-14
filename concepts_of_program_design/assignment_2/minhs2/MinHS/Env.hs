@@ -12,14 +12,14 @@ import Data.Traversable (Traversable)
 import Data.Monoid
 import Prelude hiding (lookup)
 import Data.Semigroup
-
+--the usual environment of assignment 1
 newtype Env e = Env (M.Map String e) deriving (Functor, Foldable, Traversable, Show, Eq, Semigroup, Monoid)
 
 empty :: Env e
 empty = Env M.empty
 
 lookup :: Env e -> String -> Maybe e
-lookup (Env env) var = M.lookup var env
+lookup (Env env) var = M.lookup var env  -- attenzone: the type variables are the values ot this kind of hashmap
 
 add :: Env e -> (String, e) -> Env e
 add (Env env) (key,elt) = Env (M.insert key elt env)

@@ -9,7 +9,7 @@ type Program = [Bind]
 data Exp
     = Var Id
     | Prim Op
-    | Con Id
+    | Con Id -- con stays for constructor: we have only  True, False, Cons and NIl ( id is a string indeed)
     | Num Integer
     | App Exp Exp
     | If Exp Exp Exp
@@ -19,6 +19,9 @@ data Exp
     deriving (Read,Show,Eq)
 
 data Bind = Bind Id Type [Id] Exp -- very usefulll
+-- il primo id è il nome del bind
+-- il secondo id è il nome delle variabili indipendenti ( parametri formali in linguaggio informatico) dentro la funzione
+-- il codice della funzione è dentro expr
   deriving (Read,Show,Eq)
 
 data Op = Add

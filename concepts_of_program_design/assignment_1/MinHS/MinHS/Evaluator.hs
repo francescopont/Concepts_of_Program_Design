@@ -10,13 +10,12 @@ data Value = I Integer
           | B Bool
           | Nil
           | Cons Integer Value
-          | FunClosure VEnv Exp   -- added the the exp represents the FunClosure ( the FunClosure contains )
+          | FunClosure VEnv Exp   ---added
           | PartPrimOp Exp  -- ( task 2)
-          | PartFunClosure VEnv Exp  --  (task 3 )(we have added other code in other places)
+          | PartFunClosure VEnv Exp  --  (task 3 )
           | LetClosure VEnv Bind  -- (task 5)
           | LetRecClosure VEnv Bind -- (task 6)
           | Err Integer -- to handle errors
-          -- added to represent partially evaluated functions ( task 3)
            -- Add other variants as needed
            deriving (Show)
 
@@ -80,8 +79,8 @@ evalE gamma (Var varId) = case E.lookup gamma varId of
 -- variable bindings with let
 evalE gamma (Let    [(Bind varId ty [] varExpr)] expr)             =  evalE (E.add gamma (varId ,( evalE gamma varExpr)))  expr 
 evalE gamma (Let    ((Bind varId ty [] varExpr):binds) expr)       =  evalE (E.add gamma (varId ,( evalE gamma varExpr))) (Let binds expr) --(task 4: multiple bindings in let)
-evalE gamma (Let    [(Bind varId ty varList varExpr)] expr)         =  evalE (E.add gamma (varId ,( LetClosure gamma (Bind varId ty varList varExpr))))  expr -- 
-evalE gamma (Let    ((Bind varId ty varList varExpr): binds) expr)  =  evalE (E.add gamma (varId ,( LetClosure gamma (Bind varId ty varList varExpr)))) (Let binds expr) --(task 5:let bindings declare functions)
+evalE gamma (Let    [(Bind varId ty varList varExpr)] expr)         =  evalE (E.add gamma (varId ,( LetClosure gamma (Bind varId ty varList varExpr))))  expr --(task 5:let bindings declare functions)
+evalE gamma (Let    ((Bind varId ty varList varExpr): binds) expr)  =  evalE (E.add gamma (varId ,( LetClosure gamma (Bind varId ty varList varExpr)))) (Let binds expr) 
 evalE gamma (Letrec [(Bind varId ty [] varExpr)] expr)              =  evalE (E.add gamma (varId ,( LetRecClosure gamma (Bind varId ty []  varExpr))))  expr -- 
 evalE gamma (Letrec ((Bind varId ty [] varExpr): binds) expr)       =  evalE (E.add gamma (varId ,( LetRecClosure gamma (Bind varId ty [] varExpr)))) (Letrec binds expr)
 
