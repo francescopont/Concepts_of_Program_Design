@@ -15,7 +15,7 @@ data TypeError = TypeMismatch Type Type
                | NoSuchVariable Id
                | NoSuchConstructor Id
                | MalformedAlternatives
-               | ForallInRecfun
+               | ForallInRecfun -- mi manca solo uquesto
                deriving (Show)
 
 -- very very important

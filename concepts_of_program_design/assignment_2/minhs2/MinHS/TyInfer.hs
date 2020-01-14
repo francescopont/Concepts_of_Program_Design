@@ -96,31 +96,41 @@ unquantify' i s (Forall x t) = do x' <- fresh
                                               (substQType (x =:TypeVar (show i)) t)
 
 
-
 -- Implement the functions below
 -- =============================
 
 unify :: Type -> Type -> TC Subst
-unify (TypeVar v1) (TypeVar v1)     = return emptySubst
-unify (TypeVar v1) (TypeVar v2)     = return (v2 =: (TipeVar v1))
-unify (Base ty ) (Base ty)   = return emptySubst
-unify (Base ty1 ) (Base ty2)   = TypeMismatch (Base ty1) (Base  ty2)  
-unify (Prod t11 t12) (Prod t21 t22) = return ( (unify t11 t21) <> (unify t12 t22)) 
-unify (Sum t11 t12) (Sum t21 t22) = return ( (unify t11 t21) <> (unify t12 t22)) 
-unify (Arrow t11 t12) (Arrowt21 t22) = return ( (unify t11 t21) <> (unify t12 t22)) 
+unify (TypeVar v1) (TypeVar v2) = case (v1 == v2) of
+                                      True -> return emptySubst
+                                      False -> return (v2 =: (TypeVar v1))   
+unify (Base Unit ) (Base Unit)   = return emptySubst
+unify (Base Bool ) (Base Bool)   = return emptySubst
+unify (Base Int ) (Base Int)   = return emptySubst
+unify (Base ty1 ) (Base ty2)   =  typeError (TypeMismatch (Base ty1) (Base  ty2))
+unify (Prod t11 t12) (Prod t21 t22) = do  sub1 <- unify t11 t21
+                                          sub2 <-  unify t12 t22
+                                          return (sub1 <> sub2)
+unify (Sum t11 t12) (Sum t21 t22) = do  sub1 <- unify t11 t21
+                                        sub2 <-  unify t12 t22
+                                        return (sub1 <> sub2)
+unify (Arrow t11 t12) (Arrow t21 t22) = do  sub1 <- unify t11 t21
+                                            sub2 <-  unify t12 t22
+                                            return (sub1 <> sub2)
 ---arbitrary type term
 unify (TypeVar v) t = case occursCheck v t of
-                        True -> OccursCheckFailed v t
+                        True -> typeError (OccursCheckFailed v t)
                         False -> return (v =: t)
 
+unify t (TypeVar v) = unify (TypeVar v) t
 
 occursCheck :: String -> Type -> Bool
 occursCheck v (Arrow ty1 ty2) = or [(occursCheck v ty1),(occursCheck v ty2)]
 occursCheck v (Prod ty1 ty2) = or [(occursCheck v ty1),(occursCheck v ty2)]
 occursCheck v (Sum ty1 ty2) = or [(occursCheck v ty1),(occursCheck v ty2)]
 occursCheck v (Base ty) = False
-occursCheck v (TypeVar v) = True
-occursCheck v (TypeVar v1) = False -- se sono uguali ha già fatto pattern matching con la regola precedente
+occursCheck v (TypeVar v1) =  case (v == v1) of
+                              True -> True
+                              False -> False
 
 
 --this code is for the generalize
@@ -140,9 +150,10 @@ quantify' (x:xs) t = quantify'  xs (Forall x t)
 notPresentIn :: [Id] -> Id -> Bool
 notPresentIn []     tauString = True
 notPresentIn (x:xs) tauString = case (tauString /= x)of 
-                                True -> notPresentIn xs tauString xs
+                                True -> notPresentIn xs tauString 
                                 False -> False
 -- end generalize code
+
 
 inferProgram :: Gamma -> Program -> TC (Program, Type, Subst)
 -- fix the implementation - it is not correct as it is and will work
@@ -151,20 +162,21 @@ inferProgram :: Gamma -> Program -> TC (Program, Type, Subst)
 inferProgram env [Bind m _ [] exp]
   = do
       (typedExp, t, subst) <- inferExp env exp
-      return ([Bind m  (Just $ Ty t)  []  typedExp], t, subst) -- ricordati che return fa una cosa specifica nelle monadi
+      return ([Bind m   (Just (generalise env t))  [] (allTypes (substQType subst) typedExp)], t, subst)
+   -- ricordati che return fa una cosa specifica nelle monadi
 
 
--- no need to infer for integers ???
 inferExp :: Gamma -> Exp -> TC (Exp, Type, Subst)
 -- constructor type (it was already here)
-inferExp g exp@(Con id)         = do  let Just qt = constType id
-                                      t <- unquantify qt
-                                       return (exp, t, emptySubst)
+inferExp g exp@(Con id) = inferExpConstructor id g exp (constType id)
 
 ---- prim op type (basically the same)
-inferExp g exp@(Prim op)        = do let qt = primOpType op
-                                      t <- unquantify qt
-                                      return (exp, t, emptySubst)
+inferExp g exp@(Prim op) = do
+  let  qt = primOpType op
+  t <- unquantify qt
+  return (exp, t, emptySubst)
+
+
 
 ---- integer base type
 inferExp g exp@(Num n) = return (exp,Base Int, emptySubst)
@@ -173,7 +185,7 @@ inferExp g expr@(Var varId) = case E.lookup g varId of
                               Just qt -> do 
                                           t <- unquantify qt
                                           return (expr,t, emptySubst)
-                              Nothing -> error "this case has not been handled, according to the specs"
+                              Nothing -> typeError (NoSuchVariable varId)
 
 inferExp g expr@(App expr1 expr2) =  do (annotatedExpr1, ty1, subst1) <- inferExp g expr1
                                         (annotatedExpr2, ty2, subst2) <- inferExp (substGamma subst1 g)   expr2
@@ -189,38 +201,40 @@ inferExp g expr@(If expr1 expr2 expr3) =  do  (annotatedExpr1, ty1, subst1) <- i
                                               return (expr, (substitute finalSub ty3), (subst1 <> substBool <> subst2 <> subst3 <> finalSub))
 
 
-inferExp g expr@(Let ((Bind varId ty [] expr1)) expr2) = do     (annotatedExpr1, ty1, subst1) <- inferExp g expr1
-                                                                new_g                         <- (substGamma subst1 g)
-                                                                (annotatedExpr2, ty2, subst2) <- inferExp ( new_g 'union'(varId, (generalise new_g ty1)))  expr2
-                                                                return (expr,ty2, (subst1 <> subst2))
+inferExp g (Let [Bind varId x [] expr1] expr2) = do         (annotatedExpr1, ty1, subst1) <- inferExp g expr1
+                                                            let new_g                         = substGamma subst1 g
+                                                            (annotatedExpr2, ty2, subst2) <- inferExp (  E.add new_g  (varId, (generalise new_g ty1))) expr2
+                                                            return ((Let [Bind varId (Just (Ty ty2)) [] annotatedExpr1] annotatedExpr2),ty2, (subst1 <> subst2))
 
-inferExp g expr@(Let ((Bind varId ty [] expr1):bs) expr2) = do  (annotatedExpr1, ty1, subst1) <- inferExp g expr1
-                                                                new_g                         <- (substGamma subst1 g)
-                                                                inferExp ( new_g 'union'(varId, (generalise new_g ty1))) (Let bs expr2)
+inferExp g expr@(Let ((Bind varId _ [] expr1):bs) expr2) = do   (annotatedExpr1, ty1, subst1) <- inferExp g expr1
+                                                                let new_g                      = substGamma subst1 g
+                                                                inferExp ( E.add new_g (varId, (generalise new_g ty1))) (Let bs expr2)
 
-inferExp g expression@(Case expr [Alt "Inl" x:xs expr1, Alt "Inr" y:ys expr2]) = do   (annotatedExpr, ty, subst) <- inferExp g expr
-                                                                                      (alphal) <- fresh
-                                                                                      (annotatedExpr1, ty1, subst1) <- inferExp (substGamma subst (g 'union' (x,alphal))) expr1
-                                                                                      (alphar) <- fresh
-                                                                                      (annotatedExpr2, ty2, subst2) <- inferExp (substGamma subst1 (substGamma subst (g 'union' (y,alphar)))) expr2
-                                                                                      finalSub <- unify (substitute subst2 (substitute subst1 (substitute subst(Sum alphal alphar)))) (substitute subst2 (substitute subst1 (ty)))
-                                                                                      finalSub' <- unify (substitute finalSub (substitute subst2 ty1)) ( substitute finalSub ty2)
-                                                                                      return (expression, (substitute finalSub' (substitute finalSub ty2)), (finalSub' <> finalSub <> subst2 <> subst1 <> subst))
+inferExp g expression@(Case expr [Alt "Inl" [x] expr1, Alt "Inr" [y] expr2]) = do (annotatedExpr, ty, subst) <- inferExp g expr
+                                                                                  (alphal) <- fresh
+                                                                                  (annotatedExpr1, ty1, subst1) <- inferExp (substGamma subst (E.add g (x,Ty alphal))) expr1
+                                                                                  (alphar) <- fresh
+                                                                                  (annotatedExpr2, ty2, subst2) <- inferExp (substGamma subst1 (substGamma subst (E.add g (y, Ty alphar)))) expr2
+                                                                                  finalSub <- unify (substitute subst2 (substitute subst1 (substitute subst(Sum alphal alphar)))) (substitute subst2 (substitute subst1 (ty)))
+                                                                                  finalSub' <- unify (substitute finalSub (substitute subst2 ty1)) ( substitute finalSub ty2)
+                                                                                  return (expression, (substitute finalSub' (substitute finalSub ty2)), (finalSub' <> finalSub <> subst2 <> subst1 <> subst))
                                                                             
 inferExp g expression@((Recfun (Bind funId _  [] funExpr ))) = inferExp g funExpr
 inferExp g expression@((Recfun (Bind funId _ [x] funExpr ))) = do (alpha1) <- fresh
                                                                   (alpha2) <- fresh
-                                                                  (annotatedExpr, ty, subst) <- inferExp (g 'union' (x,alpha1) 'union' (funId, alpha2))  funId
-                                                                  (finalSub) <- unify (substitute subst alpha2) (Base (substitute subst alpha1) `Arrow` ty)
-                                                                  return (expression, (substitute finalSub (Base (substitute subst alpha1) `Arrow` ty)), (finalSub <> subst))
+                                                                  (annotatedExpr, ty, subst) <- inferExp (E.addAll g [(x, Ty alpha1),(funId, Ty alpha2)])  funExpr
+                                                                  (finalSub) <- unify (substitute subst alpha2) ( (substitute subst alpha1) `Arrow` ty)
+                                                                  let (finalty) = substitute finalSub ( (substitute subst alpha1)`Arrow` ty)
+                                                                  return (((Recfun (Bind funId (Just (Ty finalty)) [x] funExpr ))),finalty , (finalSub <> subst))
 
 inferExp g (Case e _) = typeError MalformedAlternatives -- è importante capire come fare a gestire le eccezioni                                                           
 inferExp g _ = error "Implement me!"    
--- implement all the missing cases
--- -- Note:  the only case you need to handle for case expressions is:
--- inferExp g (Case e [Alt "Inl" [x] e1, Alt "Inr" [y] e2]) -- this is the deconstructor 
--- for all others, raise an error:
--- inferExp g (Case e _) = typeError MalformedAlternatives
+
+inferExpConstructor :: String -> Gamma -> Exp -> Maybe QType -> TC (Exp,Type,Subst)
+inferExpConstructor id g exp Nothing = typeError (NoSuchConstructor id)
+inferExpConstructor id g exp (Just qt) = do
+  t <- unquantify qt
+  return (exp, t, emptySubst)
 
 
 
