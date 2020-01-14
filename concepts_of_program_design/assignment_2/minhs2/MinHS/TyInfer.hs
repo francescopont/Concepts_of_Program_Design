@@ -104,25 +104,25 @@ unify :: Type -> Type -> TC Subst
 unify = error "implement me"
 
 
---
+--this code is for the gene
 generalise :: Gamma -> Type -> QType
-generalise g t = quantify (filter ( notpresentIn (tvGamma g)) (tv t)) t -- check gamma now
+generalise g t = quantify (filter ( notPresentIn (tvGamma g)) (tv t)) t -- check gamma now
 generalise _ _ = error "implement me better, Mario"
 
-quantify :: [Id] -> Type ->Qtype
-quantify [] t = Ty t
-quantify x:xs t = quantify'  xs (Forall x (Ty t))
+quantify :: [Id] -> Type ->QType
+quantify [] t     = Ty t
+quantify (x:xs) t = quantify'  xs (Forall x (Ty t))
 
-quantify' :: [Id] -> QType ->Qtype
-quantify' [] t =  t
-quantify' x:xs t = quantify'  xs (Forall x t)
+quantify' :: [Id] -> QType ->QType
+quantify' [] t     =  t
+quantify' (x:xs) t = quantify'  xs (Forall x t)
 
 
-notPresentIn :: Id -> [Id] -> Bool
-notPresentIn tauString [] = True
-notPresentIn tauString x:xs = case (tauString /= x)of 
-                           True -> notPresentIn tauString xs
-                           False -> False
+notPresentIn :: [Id] -> Id -> Bool
+notPresentIn []     tauString = True
+notPresentIn (x:xs) tauString = case (tauString /= x)of 
+                                True -> notPresentIn xs tauString xs
+                                False -> False
 
 
 inferProgram :: Gamma -> Program -> TC (Program, Type, Subst)
@@ -138,20 +138,17 @@ inferProgram env [Bind m _ [] exp]
 -- no need to infer for integers ???
 inferExp :: Gamma -> Exp -> TC (Exp, Type, Subst)
 -- constructor type (it was already here)
-inferExp g exp@(Con id) = do
-  let Just qt = constType id
-  t <- unquantify qt
-  return (exp, t, emptySubst)
+inferExp g exp@(Con id) = do  let Just qt = constType id
+                              t <- unquantify qt
+                              return (exp, t, emptySubst)
 
 ---- prim op type (basically the same)
-inferExp g exp@(Prim op) = do
-  let qt = primOpType op
-  t <- unquantify qt
-  return (exp, t, emptySubst)
+inferExp g exp@(Prim op) = do let qt = primOpType op
+                              t <- unquantify qt
+                              return (exp, t, emptySubst)
 
 ---- integer base type
-inferExp g exp@(Num n) = 
-  return (exp,Base Int, emptySubst)
+inferExp g exp@(Num n) = return (exp,Base Int, emptySubst)
 
 inferExp g expr@(Var varId) = case E.lookup g varId of
                               Just qt -> do 
@@ -173,12 +170,20 @@ inferExp g expr@(If expr1 expr2 expr3) =  do  (annotatedExpr1, ty1, subst1) <- i
                                               return (expr, (substitute finalSub ty3), (subst1 <> substBool <> subst2 <> subst3 <> finalSub))
 
 
--- implement me!!!!
---inferExp g expr@(Let ((Bind varId ty [] varExpr):bs) x)  =  let TC (annotatedExpr1, ty1, subst1) = inferExp g varExpr
-inferExp g _ = error "Implement me!"  
+inferExp g expr@(Let ((Bind varId ty [] expr1)) expr2) = do     (annotatedExpr1, ty1, subst1) <- inferExp g varExpr
+                                                                new_g                         <- (substGamma subst1 g)
+                                                                (annotatedExpr2, ty2, subst2) <- inferExp ( new_g 'union'(varId, (generalise new_g ty1)))  expr2
+                                                                return (expr,ty2, (subst1 <> subst2))
+
+inferExp g expr@(Let ((Bind varId ty [] expr1):bs) expr2) = do  (annotatedExpr1, ty1, subst1) <- inferExp g varExpr
+                                                                new_g                         <- (substGamma subst1 g)
+                                                                inferExp ( new_g 'union'(varId, (generalise new_g ty1))) (Let bs expr2)
+inferExp g (Case e [Alt "Inl" [x] e1, Alt "Inr" [y] e2]) = do   
+inferExp g (Case e _) = typeError MalformedAlternatives -- è importante capire come fare a gestire le eccezioni                                                           
+inferExp g _ = error "Implement me!"    
 -- implement all the missing cases
 -- -- Note:  the only case you need to handle for case expressions is:
--- inferExp g (Case e [Alt "Inl" [x] e1, Alt "Inr" [y] e2])
+-- inferExp g (Case e [Alt "Inl" [x] e1, Alt "Inr" [y] e2]) -- this is the deconstructor 
 -- for all others, raise an error:
 -- inferExp g (Case e _) = typeError MalformedAlternatives
 

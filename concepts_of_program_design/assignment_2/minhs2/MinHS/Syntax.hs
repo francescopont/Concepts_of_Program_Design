@@ -14,7 +14,7 @@ data Exp
     | Num  Integer  --DONE
     | App  Exp Exp  -- DONE
     | If   Exp Exp Exp  --DONE
-    | Let  [Bind] Exp
+    | Let  [Bind] Exp   -- DONE
     | Recfun Bind
     | Letrec [Bind] Exp
     | Case Exp [Alt]
