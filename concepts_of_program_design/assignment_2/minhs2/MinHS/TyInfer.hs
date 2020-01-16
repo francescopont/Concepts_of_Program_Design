@@ -123,6 +123,16 @@ unify (TypeVar v) t = case occursCheck v t of
 
 unify t (TypeVar v) = unify (TypeVar v) t
 
+qunify :: QType -> QType -> TC Subst
+qunify (Ty t1) (Ty t2) = unify t1 t2
+qunify (Ty t1) (Forall id qt) = typeError ForallInRecfun
+quinify (Forall id qt) (Ty t1) = typeError ForallInRecfun
+quinify (Forall id qt1) (Forall id qt2) = do
+                                              unqt1 <- unquantify (Forall id qt1)
+                                              unqt2 <- unquantify (Forall id qt2)
+                                              return (unify unqt1 unqt2)
+
+
 occursCheck :: String -> Type -> Bool
 occursCheck v (Arrow ty1 ty2) = or [(occursCheck v ty1),(occursCheck v ty2)]
 occursCheck v (Prod ty1 ty2) = or [(occursCheck v ty1),(occursCheck v ty2)]
@@ -163,11 +173,23 @@ inferProgram :: Gamma -> Program -> TC (Program, Type, Subst)
 -- fix the implementation - it is not correct as it is and will work
 -- only for a some cases. The code is just an example on how to use the TC type,
 -- and how to add the type information to the expression.
-inferProgram env [Bind m _ [] exp]
+inferProgram env [Bind m Nothing [] exp]
   = do
       (typedExp, t, subst) <- inferExp env exp
       return ([Bind m   (Just (generalise env t))  [] (allTypes (substQType subst) typedExp)], t, subst)
    -- ricordati che return fa una cosa specifica nelle monadi
+inferProgram env [Bind m (Just x) [] exp]
+  = do
+      (typedExp, t, subst) <- inferExp env exp
+      let generalized = generalise env t
+      specialSub <- qunify x generalized
+      return ([Bind m   (Just (substQType specialSub generalized))  [] (allTypes (substQType (substQtype specialSub subst) typedExp)], t, subst)
+   -- ricordati che return fa una cosa specifica nelle monadi
+
+
+
+
+
 
 
 inferExp :: Gamma -> Exp -> TC (Exp, Type, Subst)
@@ -205,16 +227,18 @@ inferExp g (If expr1 expr2 expr3) =  do       (annotatedExpr1, ty1, subst1) <- i
                                               return ((If annotatedExpr1 annotatedExpr2 annotatedExpr3), (substitute finalSub ty3), (subst1 <> substBool <> subst2 <> subst3 <> finalSub))
 
 
-inferExp g (Let [Bind varId x [] expr1] expr2) = do         (annotatedExpr1, ty1, subst1) <- inferExp g expr1
+inferExp g (Let [Bind varId Nothing [] expr1] expr2) = do         (annotatedExpr1, ty1, subst1) <- inferExp g expr1
                                                             let new_g                         = substGamma subst1 g
                                                             let generalized                   = generalise new_g ty1
                                                             (annotatedExpr2, ty2, subst2) <- inferExp (  E.add new_g  (varId,generalized )) expr2
                                                             return ((Let [Bind varId (Just generalized) [] annotatedExpr1] annotatedExpr2),ty2, (subst1 <> subst2))
 
---inferExp g expr@(Let ((Bind varId _ [] expr1):bs) expr2) = do   (annotatedExpr1, ty1, subst1) <- inferExp g expr1
-                                                                --let new_g                      = substGamma subst1 g
-                                                                --(annotatedExpr2, ty2, subst2) <- inferExp ( E.add new_g (varId, (generalise new_g ty1))) (Let bs expr2)
-                                                                --return ((Let ((Bind varId (Just (Ty ty2)) [] annotatedExpr1) annotatedExpr2),ty2, (subst1 <> subst2))
+inferExp g (Let [Bind varId (Just x) [] expr1] expr2) = do         (annotatedExpr1, ty1, subst1) <- inferExp g expr1
+                                                            let new_g                         = substGamma subst1 g
+                                                            let generalized                   = generalise new_g ty1
+                                                            (annotatedExpr2, ty2, subst2) <- inferExp (  E.add new_g  (varId,generalized )) expr2
+                                                            specialSub <- qunify x generalized
+                                                            return ((Let [Bind varId (Just (substQType specialSub generalized)) [] annotatedExpr1] annotatedExpr2),(substitute specialSub ty2), (subst1 <> subst2 <> specialSub))
 
 inferExp g (Case expr [Alt "Inl" [x] expr1, Alt "Inr" [y] expr2]) = do            (annotatedExpr, ty, subst) <- inferExp g expr
                                                                                   (alphal) <- fresh
@@ -226,12 +250,22 @@ inferExp g (Case expr [Alt "Inl" [x] expr1, Alt "Inr" [y] expr2]) = do          
                                                                                   return ((Case annotatedExpr [Alt "Inl" [x] annotatedExpr1, Alt "Inr" [y] annotatedExpr2]), (substitute finalSub' (substitute finalSub ty2)), (finalSub' <> finalSub <> subst2 <> subst1 <> subst))
                                                                             
 inferExp g ((Recfun (Bind funId _  [] funExpr ))) = inferExp g funExpr
-inferExp g ((Recfun (Bind funId _ [x] funExpr ))) = do            (alpha1) <- fresh
+inferExp g ((Recfun (Bind funId Nothing [x] funExpr ))) = do      (alpha1) <- fresh
                                                                   (alpha2) <- fresh
                                                                   (annotatedExpr, ty, subst) <- inferExp (E.addAll g [(x, Ty alpha1),(funId, Ty alpha2)])  funExpr
                                                                   (finalSub) <- unify (substitute subst alpha2) ( (substitute subst alpha1) `Arrow` ty)
                                                                   let (finalty) = substitute finalSub ( (substitute subst alpha1)`Arrow` ty)
                                                                   return (((Recfun (Bind funId (Just (Ty finalty)) [x] annotatedExpr ))),finalty , (finalSub <> subst))
+
+inferExp g ((Recfun (Bind funId (Just x) [x] funExpr ))) = do     (alpha1) <- fresh
+                                                                  (alpha2) <- fresh
+                                                                  (annotatedExpr, ty, subst) <- inferExp (E.addAll g [(x, Ty alpha1),(funId, Ty alpha2)])  funExpr
+                                                                  (finalSub) <- unify (substitute subst alpha2) ( (substitute subst alpha1) `Arrow` ty)
+                                                                  let (finalty) = substitute finalSub ( (substitute subst alpha1)`Arrow` ty)
+                                                                  specialSub <- qunify x (Ty finalty)
+                                                                  return (((Recfun (Bind funId (Just ((substQType specialSub (Ty finalty)))) [x] annotatedExpr ))),(substitute specialSub finalty) , (finalSub <> subst))
+
+
 
 inferExp g (Case e _) = typeError MalformedAlternatives -- è importante capire come fare a gestire le eccezioni                                                           
 inferExp g _ = error "Implement me!"    
