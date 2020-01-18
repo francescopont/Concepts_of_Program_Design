@@ -5,6 +5,7 @@ import MinHS.Syntax
 import MinHS.Subst
 import MinHS.TCMonad
 
+import MinHS.Subst (Subst)
 import Data.Monoid (Monoid (..), (<>))
 import Data.Foldable (foldMap)
 import Data.List (nub, union, (\\))
@@ -117,35 +118,25 @@ unify (Arrow t11 t12) (Arrow t21 t22) = do  sub1 <- unify t11 t21
                                             sub2 <-  unify t12 t22
                                             return (sub1 <> sub2)
 ---arbitrary type term
-unify (TypeVar v) t = case occursCheck v t of
-                        True -> typeError (OccursCheckFailed v t)
-                        False -> return (v =: t)
+unify (TypeVar v) t = case notOccursCheck t v of
+                        True -> return (v =: t)
+                        False -> typeError (OccursCheckFailed v t)
 
 unify t (TypeVar v) = unify (TypeVar v) t
-
-qunify :: QType -> QType -> TC Subst
-qunify (Ty t1) (Ty t2) = unify t1 t2
-qunify (Ty t1) (Forall id qt) = typeError ForallInRecfun
-quinify (Forall id qt) (Ty t1) = typeError ForallInRecfun
-quinify (Forall id qt1) (Forall id qt2) = do
-                                              unqt1 <- unquantify (Forall id qt1)
-                                              unqt2 <- unquantify (Forall id qt2)
-                                              return (unify unqt1 unqt2)
+unify _ _ = typeError MalformedAlternatives
 
 
-occursCheck :: String -> Type -> Bool
-occursCheck v (Arrow ty1 ty2) = or [(occursCheck v ty1),(occursCheck v ty2)]
-occursCheck v (Prod ty1 ty2) = or [(occursCheck v ty1),(occursCheck v ty2)]
-occursCheck v (Sum ty1 ty2) = or [(occursCheck v ty1),(occursCheck v ty2)]
-occursCheck v (Base ty) = False
-occursCheck v (TypeVar v1) =  case (v == v1) of
-                              True -> True
-                              False -> False
+notOccursCheck :: Type -> String -> Bool
+notOccursCheck (Arrow ty1 ty2) v  = and [(notOccursCheck ty1 v),(notOccursCheck ty2 v)]
+notOccursCheck (Prod ty1 ty2) v  = and [(notOccursCheck ty1 v),(notOccursCheck ty2 v)]
+notOccursCheck (Sum ty1 ty2) v  = and [(notOccursCheck ty1 v),(notOccursCheck ty2 v)]
+notOccursCheck (Base ty) v  = True
+notOccursCheck (TypeVar v1) v  =  v /= v1
 
 
 --this code is for the generalize (start from heeeereee)
 generalise :: Gamma -> Type -> QType
-generalise g t = quantify (filter ( notPresentIn (tvGamma g))(tv t) ) t -- check gamma now
+generalise g t = quantify (filter ( notPresentIn (tvGamma g))  (tv t) ) t -- check gamma now
 
 quantify :: [Id] -> Type ->QType
 quantify [] t     = Ty t
@@ -157,15 +148,16 @@ quantify' [] t     =  t
 quantify' [x] t    = (Forall x  t)
 quantify' (x:xs) t = quantify'  xs (Forall x t)
 
+freeVariables :: Gamma-> Type -> [Id]
+freeVariables g t = (filter ( notPresentIn (tvGamma g))(tv t) )
 
 notPresentIn :: [Id] -> Id -> Bool
 notPresentIn []     tauString = True
-notPresentIn [x]     tauString = case (tauString /= x)of 
-                                True -> True
-                                False -> False
+notPresentIn [x]     tauString = tauString /= x
 notPresentIn (x:xs) tauString = case (tauString /= x)of 
-                                True -> notPresentIn xs tauString 
+                                True ->  notPresentIn xs tauString
                                 False -> False
+
 -- end generalize code
 
 
@@ -181,9 +173,12 @@ inferProgram env [Bind m Nothing [] exp]
 inferProgram env [Bind m (Just x) [] exp]
   = do
       (typedExp, t, subst) <- inferExp env exp
-      let generalized = generalise env t
-      specialSub <- qunify x generalized
-      return ([Bind m   (Just (substQType specialSub generalized))  [] (allTypes (substQType (substQtype specialSub subst) typedExp)], t, subst)
+      unquantifiedx <- unquantify x
+      (specialSub) <- unify' env (tv unquantifiedx ) (freeVariables env t) unquantifiedx  ( t)
+      let special_g       = substGamma specialSub env
+      let special_ty1     = substitute specialSub t
+      let generalized = generalise special_g special_ty1
+      return ([Bind m   (Just (Ty special_ty1))  [] (allTypes  (substQType (specialSub <> subst)) typedExp)], t, (subst<> specialSub))
    -- ricordati che return fa una cosa specifica nelle monadi
 
 
@@ -217,7 +212,7 @@ inferExp g (App expr1 expr2) =       do (annotatedExpr1, ty1, subst1) <- inferEx
                                         (annotatedExpr2, ty2, subst2) <- inferExp (substGamma subst1 g)   expr2
                                         (alpha) <- fresh
                                         (finalSub) <- unify (substitute subst2 ty1) (ty2 `Arrow` alpha)
-                                        return ((App annotatedExpr1 annotatedExpr2), (substitute finalSub alpha), (subst1 <> subst2 <> finalSub))
+                                        return ((App annotatedExpr1 annotatedExpr2), (substitute finalSub alpha), (finalSub <> subst2 <> subst1))
 
 inferExp g (If expr1 expr2 expr3) =  do       (annotatedExpr1, ty1, subst1) <- inferExp g expr1
                                               (substBool) <- unify  ty1 (Base Bool)
@@ -227,18 +222,22 @@ inferExp g (If expr1 expr2 expr3) =  do       (annotatedExpr1, ty1, subst1) <- i
                                               return ((If annotatedExpr1 annotatedExpr2 annotatedExpr3), (substitute finalSub ty3), (subst1 <> substBool <> subst2 <> subst3 <> finalSub))
 
 
-inferExp g (Let [Bind varId Nothing [] expr1] expr2) = do         (annotatedExpr1, ty1, subst1) <- inferExp g expr1
-                                                            let new_g                         = substGamma subst1 g
-                                                            let generalized                   = generalise new_g ty1
+inferExp g (Let [Bind varId Nothing [] expr1] expr2) = do   (annotatedExpr1, ty1, subst1) <- inferExp g expr1
+                                                            let new_g                      = substGamma subst1 g
+                                                            let generalized                = generalise new_g ty1
                                                             (annotatedExpr2, ty2, subst2) <- inferExp (  E.add new_g  (varId,generalized )) expr2
                                                             return ((Let [Bind varId (Just generalized) [] annotatedExpr1] annotatedExpr2),ty2, (subst1 <> subst2))
 
-inferExp g (Let [Bind varId (Just x) [] expr1] expr2) = do         (annotatedExpr1, ty1, subst1) <- inferExp g expr1
-                                                            let new_g                         = substGamma subst1 g
-                                                            let generalized                   = generalise new_g ty1
-                                                            (annotatedExpr2, ty2, subst2) <- inferExp (  E.add new_g  (varId,generalized )) expr2
-                                                            specialSub <- qunify x generalized
-                                                            return ((Let [Bind varId (Just (substQType specialSub generalized)) [] annotatedExpr1] annotatedExpr2),(substitute specialSub ty2), (subst1 <> subst2 <> specialSub))
+inferExp g (Let [Bind varId (Just x) [] expr1] expr2) = do  (annotatedExpr1, ty1, subst1) <- inferExp g expr1
+                                                            let new_g                         = substGamma subst1 g 
+                                                            unquantifiedx <- unquantify x
+                                                            (specialSub) <- unify' new_g (tv unquantifiedx) (freeVariables new_g ty1) unquantifiedx ( ty1)
+                                                            let special_g       = substGamma specialSub new_g
+                                                            let special_ty1     = substitute specialSub ty1
+                                                            let generalized     = generalise special_g special_ty1
+                                                            (annotatedExpr2, ty2, subst2) <- inferExp (  E.add special_g  (varId,generalized )) expr2
+                                                            
+                                                            return ((Let [Bind varId (Just ( generalized)) [] annotatedExpr1] annotatedExpr2),(substitute specialSub ty2), (subst1 <> subst2 <> specialSub))
 
 inferExp g (Case expr [Alt "Inl" [x] expr1, Alt "Inr" [y] expr2]) = do            (annotatedExpr, ty, subst) <- inferExp g expr
                                                                                   (alphal) <- fresh
@@ -257,24 +256,104 @@ inferExp g ((Recfun (Bind funId Nothing [x] funExpr ))) = do      (alpha1) <- fr
                                                                   let (finalty) = substitute finalSub ( (substitute subst alpha1)`Arrow` ty)
                                                                   return (((Recfun (Bind funId (Just (Ty finalty)) [x] annotatedExpr ))),finalty , (finalSub <> subst))
 
-inferExp g ((Recfun (Bind funId (Just x) [x] funExpr ))) = do     (alpha1) <- fresh
+inferExp g ((Recfun (Bind funId (Just userx) [x] funExpr ))) = do (alpha1) <- fresh
                                                                   (alpha2) <- fresh
                                                                   (annotatedExpr, ty, subst) <- inferExp (E.addAll g [(x, Ty alpha1),(funId, Ty alpha2)])  funExpr
-                                                                  (finalSub) <- unify (substitute subst alpha2) ( (substitute subst alpha1) `Arrow` ty)
-                                                                  let (finalty) = substitute finalSub ( (substitute subst alpha1)`Arrow` ty)
-                                                                  specialSub <- qunify x (Ty finalty)
-                                                                  return (((Recfun (Bind funId (Just ((substQType specialSub (Ty finalty)))) [x] annotatedExpr ))),(substitute specialSub finalty) , (finalSub <> subst))
-
+                                                                  (generalSub) <- unify (substitute subst alpha2) ( (substitute subst alpha1) `Arrow` ty)
+                                                                  let (finalty) = substitute generalSub ( (substitute subst alpha1)`Arrow` ty)
+                                                                  unquantifieduserx <- unquantify userx
+                                                                  ( specialSub) <- unify' g (tv unquantifieduserx) (freeVariables g finalty) unquantifieduserx ( finalty)
+                                                                  let special_g       = substGamma specialSub g
+                                                                  let special_ty1     = substitute specialSub finalty
+                                                                  return (((Recfun (Bind funId (Just (Ty special_ty1)) [x] annotatedExpr ))), special_ty1, (specialSub <> generalSub <> subst ))
 
 
 inferExp g (Case e _) = typeError MalformedAlternatives -- è importante capire come fare a gestire le eccezioni                                                           
-inferExp g _ = error "Implement me!"    
+inferExp g _ = typeError ForallInRecfun  
 
 inferExpConstructor :: String -> Gamma -> Exp -> Maybe QType -> TC (Exp,Type,Subst)
 inferExpConstructor id g exp Nothing = typeError (NoSuchConstructor id)
 inferExpConstructor id g exp (Just qt) = do
   t <- unquantify qt
   return (exp, t, emptySubst)
+
+---------------------------------------------- for task 2
+
+---------------------------------------------------------------
+unify' :: Gamma -> [Id] -> [Id] -> Type -> Type -> TC Subst -- the first type is the one of the user, the second is of the machine
+unify' g redusersvars redvars (TypeVar v1) (TypeVar v2) = case elem v1 redusersvars of
+                                                          True -> case elem v2 redvars of
+                                                                    True -> checkConsistency g v2 (TypeVar v1)
+                                                                    False -> typeError (TypeMismatch (TypeVar v1) (TypeVar v2))
+                                                          False -> typeError (TypeMismatch (TypeVar v1) (TypeVar v2))-- the user can't specify a new variable type without doing forall quantification over it                                                    
+    
+unify' g redusersvars redvars (Base Unit ) (Base Unit)   = return emptySubst
+unify' g redusersvars redvars (Base Bool ) (Base Bool)   = return emptySubst
+unify' g redusersvars redvars(Base Int ) (Base Int)   = return emptySubst
+unify' g redusersvars redvars(Base ty1 ) (Base ty2)   =  typeError (TypeMismatch (Base ty1) (Base  ty2))
+unify' g redusersvars redvars(Prod t11 t12) (Prod t21 t22) = do sub1 <- unify' g redusersvars redvars t11 t21
+                                                                let new_g = substGamma sub1 g
+                                                                sub2 <-  unify' new_g redusersvars redvars t12 t22
+                                                                return (sub1 <> sub2)
+
+unify' g redusersvars redvars(Sum t11 t12) (Sum t21 t22) = do sub1 <- unify' g redusersvars redvars t11 t21
+                                                              let new_g = substGamma sub1 g
+                                                              sub2 <-  unify' new_g redusersvars redvars t12 t22
+                                                              return (sub1 <> sub2)
+
+unify' g redusersvars redvars(Arrow t11 t12) (Arrow t21 t22) = do sub1 <- unify' g redusersvars redvars t11 t21
+                                                                  let new_g = substGamma sub1 g
+                                                                  sub2 <-  unify' new_g redusersvars redvars t12 t22
+                                                                  return (sub1 <> sub2)
+---arbitrary type term
+unify' g redusersvars redvars (TypeVar v) t = typeError (TypeMismatch (TypeVar v) t )-- since a typevar on the left is always a forall, yoou can match a forall only with a forall, otherwise you're doing it too general
+unify' g redusersvars redvars t (TypeVar v2) = specialCase g (elem v2 redvars) (length (tv t)) v2 t                                               -- so here he user is specifying something more specific than the machine, so it's actually a good option
+unify' g redusersvars redvars t1 t2 = typeError (TypeMismatch t1 t2)
+
+specialCase :: Gamma -> Bool -> Int -> Id -> Type -> TC Subst
+specialCase g True 1 v1 t = checkConsistency g v1 t
+specialCase g True 0 v1 t = checkConsistency g v1 t
+specialCase g False 0 v1 t = checkConsistency g v1 t
+specialCase g  x y v1 t = typeError MalformedAlternatives
+
+
+checkConsistency :: Gamma ->Id ->Type -> TC Subst -- 
+checkConsistency g id new_type = case E.lookup g id of
+                                  Nothing -> 
+                                             assigndirectly id new_type 
+                                  Just (Ty  x) -> dothecompare g (mycompare new_type  x) id new_type (x)
+                                  _ -> error "unexpected behaviour"
+
+
+dothecompare :: Gamma -> Bool -> Id -> Type ->Type ->  TC Subst
+dothecompare g True id ty1 ty2 = do
+                                  (sub) <- unify ty1 ty2
+                                  let final_type = substitute sub ty1
+                                  return (sub)
+dothecompare g False id ty1 ty2 = typeError MalformedAlternatives
+
+
+assigndirectly :: Id -> Type -> TC Subst
+assigndirectly  id ty = return (id =: ty)
+                        
+
+
+
+
+mycompare :: Type -> Type -> Bool
+mycompare (Base Bool) (Base Bool) = True
+mycompare (Base Int) (Base Int ) = True
+mycompare (Prod t11 t12) (Prod t21 t22) = and ([mycompare t11 t12] ++ [mycompare t12 t22])
+mycompare (Sum t11 t12) (Sum t21 t22) = and ([mycompare t11 t12] ++ [mycompare t12 t22])
+mycompare (Arrow t11 t12) (Arrow t21 t22) = and ([mycompare t11 t12] ++ [mycompare t12 t22])
+mycompare (TypeVar v1) (TypeVar v2) = v1 == v2
+mycompare (TypeVar v1) t = False
+mycompare y (TypeVar t1) = False
+mycompare t1 t2 = False
+
+
+
+
 
 
 
