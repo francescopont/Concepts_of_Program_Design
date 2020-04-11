@@ -29,12 +29,12 @@ version :: Version
 version = Version [0,1,0,0] []
 bindir, libdir, dynlibdir, datadir, libexecdir, sysconfdir :: FilePath
 
-bindir     = "C:\\Users\\ponti\\Documenti\\github\\Haskell\\concepts\\MinHS\\.stack-work\\install\\61863205\\bin"
-libdir     = "C:\\Users\\ponti\\Documenti\\github\\Haskell\\concepts\\MinHS\\.stack-work\\install\\61863205\\lib\\x86_64-windows-ghc-8.6.5\\minhs1-0.1.0.0-L3tPh3RfeUF73GB0dYm6H2-MinHS"
-dynlibdir  = "C:\\Users\\ponti\\Documenti\\github\\Haskell\\concepts\\MinHS\\.stack-work\\install\\61863205\\lib\\x86_64-windows-ghc-8.6.5"
-datadir    = "C:\\Users\\ponti\\Documenti\\github\\Haskell\\concepts\\MinHS\\.stack-work\\install\\61863205\\share\\x86_64-windows-ghc-8.6.5\\minhs1-0.1.0.0"
-libexecdir = "C:\\Users\\ponti\\Documenti\\github\\Haskell\\concepts\\MinHS\\.stack-work\\install\\61863205\\libexec\\x86_64-windows-ghc-8.6.5\\minhs1-0.1.0.0"
-sysconfdir = "C:\\Users\\ponti\\Documenti\\github\\Haskell\\concepts\\MinHS\\.stack-work\\install\\61863205\\etc"
+bindir     = "D:\\Users\\Francesco\\Documenti\\Github\\Haskell\\concepts_of_program_design\\assignment_1\\MinHS\\.stack-work\\install\\7b47a920\\bin"
+libdir     = "D:\\Users\\Francesco\\Documenti\\Github\\Haskell\\concepts_of_program_design\\assignment_1\\MinHS\\.stack-work\\install\\7b47a920\\lib\\x86_64-windows-ghc-8.6.5\\minhs1-0.1.0.0-L3tPh3RfeUF73GB0dYm6H2-MinHS"
+dynlibdir  = "D:\\Users\\Francesco\\Documenti\\Github\\Haskell\\concepts_of_program_design\\assignment_1\\MinHS\\.stack-work\\install\\7b47a920\\lib\\x86_64-windows-ghc-8.6.5"
+datadir    = "D:\\Users\\Francesco\\Documenti\\Github\\Haskell\\concepts_of_program_design\\assignment_1\\MinHS\\.stack-work\\install\\7b47a920\\share\\x86_64-windows-ghc-8.6.5\\minhs1-0.1.0.0"
+libexecdir = "D:\\Users\\Francesco\\Documenti\\Github\\Haskell\\concepts_of_program_design\\assignment_1\\MinHS\\.stack-work\\install\\7b47a920\\libexec\\x86_64-windows-ghc-8.6.5\\minhs1-0.1.0.0"
+sysconfdir = "D:\\Users\\Francesco\\Documenti\\Github\\Haskell\\concepts_of_program_design\\assignment_1\\MinHS\\.stack-work\\install\\7b47a920\\etc"
 
 getBinDir, getLibDir, getDynLibDir, getDataDir, getLibexecDir, getSysconfDir :: IO FilePath
 getBinDir = catchIO (getEnv "minhs1_bindir") (\_ -> return bindir)
