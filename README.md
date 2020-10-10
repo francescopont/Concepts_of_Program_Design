@@ -1,4 +1,4 @@
-# Haskell
+# Concepts of Program Design
 This repo contains the assignments of the course Concepts of Program Design at Utrecht University, academic year 2019/2020, in the folder concepts_of_program-design. All the code is written in Haskell.
 
 # Description
