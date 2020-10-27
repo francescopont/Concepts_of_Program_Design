@@ -51,11 +51,11 @@ type Gamma = E.Env QType
 initialGamma :: Gamma
 initialGamma = E.empty
 
-tv :: Type -> [Id]   -- tv sono le free variables: a che cosa possono servire??? boh boh
+tv :: Type -> [Id]   
 tv = tv'
  where
    tv' (TypeVar x) = [x]
-   tv' (Prod  a b) = tv a `union` tv b -- usando queste apici si può usare in forma infissa, molto più leggibile
+   tv' (Prod  a b) = tv a `union` tv b
    tv' (Sum   a b) = tv a `union` tv b
    tv' (Arrow a b) = tv a `union` tv b
    tv' (Base c   ) = []
@@ -88,7 +88,7 @@ variable with a guaranteed non-colliding variable with a numeric name,
 and then substituting those numeric names for our normal fresh variables
 -}
 
-unquantify = unquantify' 0 emptySubst -- anche qua mantengo non specificato il parametro e faccio pattern matching
+unquantify = unquantify' 0 emptySubst 
 unquantify' :: Int -> Subst -> QType -> TC Type
 unquantify' i s (Ty t) = return $ substitute s t
 unquantify' i s (Forall x t) = do x' <- fresh
@@ -134,7 +134,7 @@ notOccursCheck (Base ty) v  = True
 notOccursCheck (TypeVar v1) v  =  v /= v1
 
 
---this code is for the generalize (start from heeeereee)
+
 generalise :: Gamma -> Type -> QType
 generalise g t = quantify (filter ( notPresentIn (tvGamma g))  (tv t) ) t -- check gamma now
 
@@ -162,14 +162,11 @@ notPresentIn (x:xs) tauString = case (tauString /= x)of
 
 
 inferProgram :: Gamma -> Program -> TC (Program, Type, Subst)
--- fix the implementation - it is not correct as it is and will work
--- only for a some cases. The code is just an example on how to use the TC type,
--- and how to add the type information to the expression.
 inferProgram env [Bind m Nothing [] exp]
   = do
       (typedExp, t, subst) <- inferExp env exp
       return ([Bind m   (Just (generalise env t))  [] (allTypes (substQType subst) typedExp)], t, subst)
-   -- ricordati che return fa una cosa specifica nelle monadi
+   
 inferProgram env [Bind m (Just x) [] exp]
   = do
       (typedExp, t, subst) <- inferExp env exp
@@ -179,7 +176,7 @@ inferProgram env [Bind m (Just x) [] exp]
       let special_ty1     = substitute specialSub t
       let generalized = generalise special_g special_ty1
       return ([Bind m   (Just (Ty special_ty1))  [] (allTypes  (substQType (specialSub <> subst)) typedExp)], t, (subst<> specialSub))
-   -- ricordati che return fa una cosa specifica nelle monadi
+   
 
 
 
