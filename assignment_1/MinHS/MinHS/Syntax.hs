@@ -9,19 +9,18 @@ type Program = [Bind]
 data Exp
     = Var Id
     | Prim Op
-    | Con Id -- con stays for constructor: we have only  True, False, Cons and NIl ( id is a string indeed)
+    | Con Id -- con stays for constructor: we have only  True, False, Cons and NIl 
     | Num Integer
     | App Exp Exp
     | If Exp Exp Exp
     | Let [Bind] Exp
     | Recfun Bind
-    | Letrec [Bind] Exp -- not for the basic assignment ( do not care now)
+    | Letrec [Bind] Exp 
     deriving (Read,Show,Eq)
 
-data Bind = Bind Id Type [Id] Exp -- very usefulll
--- il primo id è il nome del bind
--- il secondo id è il nome delle variabili indipendenti ( parametri formali in linguaggio informatico) dentro la funzione
--- il codice della funzione è dentro expr
+data Bind = Bind Id Type [Id] Exp 
+-- id is the name of the bind
+-- [id] are the independent variables inside Expr ( n-ary functions...)
   deriving (Read,Show,Eq)
 
 data Op = Add
@@ -42,7 +41,7 @@ data Op = Add
         deriving (Show, Eq, Read)
 
 data Type = Arrow Type Type
-          | TypeApp Type Type -- task 5 ?
+          | TypeApp Type Type -- ? for container types
           | TypeCon TyCon
           deriving (Read, Show, Eq, Ord)
 

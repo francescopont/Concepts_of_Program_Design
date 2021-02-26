@@ -19,7 +19,7 @@ empty :: Env e
 empty = Env M.empty
 
 lookup :: Env e -> String -> Maybe e
-lookup (Env env) var = M.lookup var env  -- attenzone: the type variables are the values ot this kind of hashmap
+lookup (Env env) var = M.lookup var env  -- the type variables are the values ot this kind of hashmap
 
 add :: Env e -> (String, e) -> Env e
 add (Env env) (key,elt) = Env (M.insert key elt env)

@@ -45,7 +45,7 @@ constType _       = Nothing
 
 --Inr and Inl are the constructors of the sum tpe
 -- () and Pair are the constructors of the Prod type
---True and False are the constructors of the sBool type
+--True and False are the constructors of the Bool type
 type Gamma = E.Env QType
 
 initialGamma :: Gamma
@@ -72,7 +72,7 @@ infer program = do (p',tau, s) <- runTC $ inferProgram initialGamma program
                    return p'
 
 
--- remove the quantifiers from a polymrphic type and rename all quantified variables
+-- remove the quantifiers from a polymorphic type and rename all quantified variables
 -- with fresh names.
 unquantify :: QType -> TC Type
 {-
@@ -185,10 +185,7 @@ inferProgram env [Bind m (Just x) [] exp]
 
 
 inferExp :: Gamma -> Exp -> TC (Exp, Type, Subst)
--- constructor type (it was already here)
 inferExp g exp@(Con id) = inferExpConstructor id g exp (constType id)
-
----- prim op type (basically the same)
 inferExp g exp@(Prim op) = do
   let  qt = primOpType op
   t <- unquantify qt
@@ -265,7 +262,7 @@ inferExp g ((Recfun (Bind funId (Just userx) [x] funExpr ))) = do (alpha1) <- fr
                                                                   return (((Recfun (Bind funId (Just (Ty special_ty1)) [x] annotatedExpr ))), special_ty1, (specialSub <> generalSub <> subst ))
 
 
-inferExp g (Case e _) = typeError MalformedAlternatives -- è importante capire come fare a gestire le eccezioni                                                           
+inferExp g (Case e _) = typeError MalformedAlternatives                                                           
 inferExp g _ = typeError ForallInRecfun  
 
 inferExpConstructor :: String -> Gamma -> Exp -> Maybe QType -> TC (Exp,Type,Subst)
@@ -274,7 +271,7 @@ inferExpConstructor id g exp (Just qt) = do
   t <- unquantify qt
   return (exp, t, emptySubst)
 
----------------------------------------------- for task 2
+----------------------------------------------  task 2
 
 ---------------------------------------------------------------
 unify' :: Gamma -> [Id] -> [Id] -> Type -> Type -> TC Subst -- the first type is the one of the user, the second is of the machine
@@ -303,8 +300,8 @@ unify' g redusersvars redvars(Arrow t11 t12) (Arrow t21 t22) = do sub1 <- unify'
                                                                   sub2 <-  unify' new_g redusersvars redvars t12 t22
                                                                   return (sub1 <> sub2)
 ---arbitrary type term
-unify' g redusersvars redvars (TypeVar v) t = typeError (TypeMismatch (TypeVar v) t )-- since a typevar on the left is always a forall, yoou can match a forall only with a forall, otherwise you're doing it too general
-unify' g redusersvars redvars t (TypeVar v2) = specialCase g (elem v2 redvars) (length (tv t)) v2 t                                               -- so here he user is specifying something more specific than the machine, so it's actually a good option
+unify' g redusersvars redvars (TypeVar v) t = typeError (TypeMismatch (TypeVar v) t )-- since a typevar on the left is always a forall, you can match a forall only with a forall, otherwise you're doing it too general
+unify' g redusersvars redvars t (TypeVar v2) = specialCase g (elem v2 redvars) (length (tv t)) v2 t                                               -- so here the user is specifying something more specific than the machine, so it's actually a good option
 unify' g redusersvars redvars t1 t2 = typeError (TypeMismatch t1 t2)
 
 specialCase :: Gamma -> Bool -> Int -> Id -> Type -> TC Subst
@@ -314,7 +311,7 @@ specialCase g False 0 v1 t = checkConsistency g v1 t
 specialCase g  x y v1 t = typeError MalformedAlternatives
 
 
-checkConsistency :: Gamma ->Id ->Type -> TC Subst -- 
+checkConsistency :: Gamma ->Id ->Type -> TC Subst  
 checkConsistency g id new_type = case E.lookup g id of
                                   Nothing -> 
                                              assigndirectly id new_type 

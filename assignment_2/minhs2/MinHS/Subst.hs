@@ -17,8 +17,8 @@ instance Semigroup Subst where
                             ++ map (fmap $ substitute $ Subst a) b
   
 instance Monoid Subst where
-  mempty = Subst [] -- per avere una sostituzione vuota
-  mappend = (<>) -- per aggiungere una sostituzione all'hashmap già presente
+  mempty = Subst [] -- to get an empty substitution
+  mappend = (<>) -- to add a substitution to the already present hashmap
 
 substitute :: Subst -> Type -> Type
 substitute s (Base c   ) = Base  c
@@ -30,9 +30,8 @@ substitute (Subst s) (TypeVar x) | Just t <- lookup x s = t
 
 substQType :: Subst -> QType -> QType
 substQType s (Ty t) = Ty (substitute s t)
-substQType s (Forall x t) = Forall x (substQType (remove x s) t) -- perchè devo togliere questo?? mhm per question sui quantificatori universali credo
-  where remove x (Subst s) = Subst $ filter ((/= x) . fst) s -- la dot operation è mathematical composition -> è un po' controintuitiva, perchè prima applica la frst opeation, e poi fa 
-                                                             -- l'operazione di diverso da -- perchè dovrei escludere 
+substQType s (Forall x t) = Forall x (substQType (remove x s) t) 
+  where remove x (Subst s) = Subst $ filter ((/= x) . fst) s 
 substGamma :: Subst -> Env QType -> Env QType
 substGamma = fmap . substQType
 
@@ -44,5 +43,3 @@ a =: b = Subst [(a,b)]
 
 
 
--- NOTE PER CAPIRCI QUALCOSA
---subst è una specie di hashmap

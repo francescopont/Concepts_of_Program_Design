@@ -10,13 +10,12 @@ data Value = I Integer
           | B Bool
           | Nil
           | Cons Integer Value
-          | FunClosure VEnv Exp   ---added
+          | FunClosure VEnv Exp   
           | PartPrimOp Exp  -- ( task 2)
           | PartFunClosure VEnv Exp  --  (task 3 )
           | LetClosure VEnv Bind  -- (task 5)
           | LetRecClosure VEnv Bind -- (task 6)
           | Err Integer -- to handle errors
-           -- Add other variants as needed
            deriving (Show)
 
 instance PP.Pretty Value where
@@ -28,9 +27,8 @@ instance PP.Pretty Value where
 
 evaluate :: Program -> Value
 evaluate [Bind _ _ _ e] = evalE E.empty e
-evaluate bs = evalE E.empty (Let bs (Var "main")) -- what's the purpose of this line? useless for now
+evaluate bs = evalE E.empty (Let bs (Var "main")) 
 
--- Implement the interpreter as specified by the operational semantics.
 evalE :: VEnv -> Exp -> Value
 --numbers
 evalE gamma (Num n)= (I n)  
@@ -63,7 +61,15 @@ evalE gamma (App (Prim Null) expr) = nullV (evalE gamma expr) --null
 
 -- if expression
 evalE gamma (If condExpr expr1 expr2) = ifV  gamma (evalE gamma condExpr) expr1 expr2
--- let bindings for variables
+
+-- variable bindings with let
+evalE gamma (Let    [(Bind varId ty [] varExpr)] expr)             =  evalE (E.add gamma (varId ,( evalE gamma varExpr)))  expr 
+evalE gamma (Let    ((Bind varId ty [] varExpr):binds) expr)       =  evalE (E.add gamma (varId ,( evalE gamma varExpr))) (Let binds expr) --(task 4: multiple bindings in let)
+evalE gamma (Let    [(Bind varId ty varList varExpr)] expr)         =  evalE (E.add gamma (varId ,( LetClosure gamma (Bind varId ty varList varExpr))))  expr --(task 5:let bindings declare functions)
+evalE gamma (Let    ((Bind varId ty varList varExpr): binds) expr)  =  evalE (E.add gamma (varId ,( LetClosure gamma (Bind varId ty varList varExpr)))) (Let binds expr) -- task 4 and task 5 combined
+evalE gamma (Letrec [(Bind varId ty [] varExpr)] expr)              =  evalE (E.add gamma (varId ,( LetRecClosure gamma (Bind varId ty []  varExpr))))  expr -- 
+evalE gamma (Letrec ((Bind varId ty [] varExpr): binds) expr)       =  evalE (E.add gamma (varId ,( LetRecClosure gamma (Bind varId ty [] varExpr)))) (Letrec binds expr)
+-- variables are looked up in the environment
 evalE gamma (Var varId) = case E.lookup gamma varId of
                           Just (I n) -> (I n)
                           Just (B bool) -> (B bool)
@@ -76,15 +82,13 @@ evalE gamma (Var varId) = case E.lookup gamma varId of
                           Just (LetRecClosure gamma1 (Bind varId ty []  varExpr)) -> evalE ( E.add (gamma) (varId, Err 0)) varExpr
                           Just (Err n) -> error "this variable should not be here: this is usually caused by not allowed recursion"
                           Nothing  -> error "Variable not found in this environment"
--- variable bindings with let
-evalE gamma (Let    [(Bind varId ty [] varExpr)] expr)             =  evalE (E.add gamma (varId ,( evalE gamma varExpr)))  expr 
-evalE gamma (Let    ((Bind varId ty [] varExpr):binds) expr)       =  evalE (E.add gamma (varId ,( evalE gamma varExpr))) (Let binds expr) --(task 4: multiple bindings in let)
-evalE gamma (Let    [(Bind varId ty varList varExpr)] expr)         =  evalE (E.add gamma (varId ,( LetClosure gamma (Bind varId ty varList varExpr))))  expr --(task 5:let bindings declare functions)
-evalE gamma (Let    ((Bind varId ty varList varExpr): binds) expr)  =  evalE (E.add gamma (varId ,( LetClosure gamma (Bind varId ty varList varExpr)))) (Let binds expr) 
-evalE gamma (Letrec [(Bind varId ty [] varExpr)] expr)              =  evalE (E.add gamma (varId ,( LetRecClosure gamma (Bind varId ty []  varExpr))))  expr -- 
-evalE gamma (Letrec ((Bind varId ty [] varExpr): binds) expr)       =  evalE (E.add gamma (varId ,( LetRecClosure gamma (Bind varId ty [] varExpr)))) (Letrec binds expr)
 
---task2 
+
+--recursive functions
+evalE gamma (Recfun (Bind funId typ [] funExpr )) = evalE (E.add gamma (funId, (evalE gamma funExpr))) funExpr -- to introduce infinite structures in the big step semantics 
+evalE gamma (Recfun (Bind funId typ varList funExpr )) = FunClosure gamma (Recfun (Bind (funId) typ varList funExpr )) -- to introduce closures of functions
+
+--task2(partial application of operations)
 evalE gamma (App (Prim Add) expr) = PartPrimOp  (App (Prim Add) expr)--add
 evalE gamma (App (Prim Sub) expr) = PartPrimOp  (App (Prim Sub) expr) --sub
 evalE gamma (App (Prim Mul) expr) = PartPrimOp  (App (Prim Mul) expr) --mul
@@ -104,18 +108,16 @@ evalE gamma (App (Con "Cons") (expr1)) = PartPrimOp (App (Con "Cons") (expr1)) -
 
 
 
---recursive
-evalE gamma (Recfun (Bind funId typ [] funExpr )) = evalE (E.add gamma (funId, (evalE gamma funExpr))) funExpr -- to introduce the infinite list in the big step semantics 
-evalE gamma (Recfun (Bind (funId) typ varList funExpr )) = FunClosure gamma (Recfun (Bind (funId) typ varList funExpr )) -- to introduce funClosures
 
---function application, partial application, etc
+
+--function application, partial application, let functions etc
 evalE gamma (App (expr1) (expr2)) = case evalE gamma expr1 of
-                                      PartPrimOp partExpr -> evalE gamma (App partExpr expr2)
+                                      PartPrimOp partExpr -> evalE gamma (App partExpr expr2) -- partial applications are solved
                                       FunClosure gamma1 (Recfun(Bind (funId) typ [funVar] funExpr ))               ->          evalE (E.addAll gamma1 [(funVar, (evalE gamma expr2)), (funId, (FunClosure gamma1 (Recfun(Bind (funId) typ [funVar] funExpr )))) ])          funExpr
                                       FunClosure gamma1 (Recfun(Bind (funId) typ  (funVar :funVars) funExpr ))     -> PartFunClosure (E.addAll gamma1 [(funVar, (evalE gamma expr2)), (funId, (FunClosure gamma1 (Recfun(Bind (funId) typ  (funVar :funVars) funExpr )))) ])  (Recfun (Bind (funId) typ funVars funExpr )) 
                                       PartFunClosure gamma1 (Recfun(Bind (funId) typ [funVar] funExpr ))           ->          evalE (E.add gamma1 (funVar, (evalE gamma expr2)))   funExpr  -- task 3                                       
-                                      PartFunClosure gamma1 (Recfun(Bind (funId) typ (funVar : funVars) funExpr )) -> PartFunClosure (E.add gamma1 (funVar, (evalE gamma expr2))) (Recfun (Bind (funId) typ funVars funExpr )) -- task 4
-                                      LetClosure gamma1 (Bind (funId) typ [funVar] funExpr )                       ->          evalE (E.add gamma1 (funVar, (evalE gamma expr2)))   funExpr -- task 5
+                                      PartFunClosure gamma1 (Recfun(Bind (funId) typ (funVar : funVars) funExpr )) -> PartFunClosure (E.add gamma1 (funVar, (evalE gamma expr2))) (Recfun (Bind (funId) typ funVars funExpr )) -- task 3
+                                      LetClosure gamma1 (Bind funId typ [funVar] funExpr )                       ->          evalE (E.add gamma1 (funVar, (evalE gamma expr2)))   funExpr -- task 5
                                       LetClosure gamma1 (Bind funId typ (funVar:funVars) funExpr )                 ->     LetClosure (E.add gamma1 (funVar, (evalE gamma expr2))) (Bind (funId) typ funVars funExpr ) --task 5
                                       _ -> error "unknows parameters of an application"
 

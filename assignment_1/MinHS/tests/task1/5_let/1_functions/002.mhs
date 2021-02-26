@@ -5,8 +5,8 @@ main :: Int
     let x :: Int = 2;
 
     in let
-        square :: (Int -> Int)
-               = recfun square :: (Int -> Int) x = x * x;
+        square :: (Int -> Int -> Int)
+               = recfun square :: (Int -> Int -> Int) x y = x * x + y;
 
-    in square (square x);
+    in  (square (square x 0) x);
         

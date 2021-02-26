@@ -7,14 +7,14 @@ type Id = String
 type Program = [Bind]
 
 data Exp
-    = Var  Id       -- DONE
-    | Prim Op       -- DONE
-    | Con  Id       -- DONE               -- con stays for constructor: we have True, False, Cons, NIl, ( just as in assignment 1) Pair, Unitel ( for product types), Inl, Inr ( for sum types)
+    = Var  Id       
+    | Prim Op       
+    | Con  Id                  -- con stays for constructor: we have True, False, Cons, NIl, ( just as in assignment 1) Pair, Unitel ( for product types), Inl, Inr ( for sum types)
                                 -- NB!!! no cons or NIl because we do not have lists
-    | Num  Integer  --DONE
-    | App  Exp Exp  -- DONE
-    | If   Exp Exp Exp  --DONE
-    | Let  [Bind] Exp   -- DONE
+    | Num  Integer  
+    | App  Exp Exp  
+    | If   Exp Exp Exp 
+    | Let  [Bind] Exp   
     | Recfun Bind
     | Letrec [Bind] Exp
     | Case Exp [Alt]
